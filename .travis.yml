@@ -16,8 +16,9 @@ jobs:
     - stage: npm release
       node_js: "10"
       script:
-        - npm run test:prod && npm run build
-        - npm run report-coverage
+        # skip reporting coverage for now
+        # - npm run report-coverage
+        - npm run build
         - if [ "$TRAVIS_BRANCH" = "master" -a "$TRAVIS_PULL_REQUEST" = "false" ]; then npm run deploy-docs; fi
         - if [ "$TRAVIS_BRANCH" = "master" -a "$TRAVIS_PULL_REQUEST" = "false" ]; then npm run semantic-release; fi
 branches:
