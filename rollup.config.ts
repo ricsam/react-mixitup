@@ -10,14 +10,18 @@ const pkg = require('./package.json')
 
 const libraryName = 'react-mixitup'
 
+const globals = {
+  react: 'React'
+}
+
 export default {
   input: `src/${libraryName}.tsx`,
   output: [
-    { file: pkg.main, name: camelCase(libraryName), format: 'umd', sourcemap: true },
-    { file: pkg.module, format: 'es', sourcemap: true },
+    { file: pkg.main, name: camelCase(libraryName), format: 'umd', sourcemap: true, globals },
+    { file: pkg.module, format: 'es', sourcemap: true, globals }
   ],
   watch: {
-    include: 'src/**',
+    include: 'src/**'
   },
   plugins: [
     external(),
@@ -33,6 +37,6 @@ export default {
     resolve(),
 
     // Resolve source maps to the original source
-    sourceMaps(),
-  ],
+    sourceMaps()
+  ]
 }
