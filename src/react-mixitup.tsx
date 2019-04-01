@@ -25,6 +25,13 @@ type UnparsedItems = Array<string | number | boolean>
 type Item = string
 type Items = Array<Item>
 
+type WrapperProps = {
+  children: React.ReactNode
+  style?: React.CSSProperties
+  ref?: React.Ref<HTMLElement>
+}
+type WrapperType = any
+
 type Props = {
   items: UnparsedItems
   duration: number
@@ -35,6 +42,7 @@ type Props = {
       style?: React.CSSProperties
     }[]
   ) => React.ReactNode
+  Wrapper: WrapperType
 }
 
 type Action = {
@@ -48,14 +56,6 @@ const OuterBound = React.memo(
   React.forwardRef((props: { children: React.ReactNode }, ref?: React.Ref<any>) => (
     <div style={{ position: 'relative' }} {...props} ref={ref} />
   ))
-)
-
-const Wrapper = React.memo(
-  React.forwardRef(
-    (props: { children: React.ReactNode; style?: React.CSSProperties }, ref?: React.Ref<any>) => (
-      <div {...props} ref={ref} />
-    )
-  )
 )
 
 const AbsoluteWrapper = React.memo(
@@ -75,7 +75,7 @@ const AbsoluteWrapper = React.memo(
   ))
 )
 
-function init(items: Items): State {
+function init(): State {
   return {
     hash: null,
     mount: false,
@@ -157,7 +157,20 @@ function onNextFrame(callback: () => any) {
   }, 0)
 }
 
-const ReactMixitup = ({ items: unparsedItems, duration = 500, renderCells }: Props) => {
+const makeWrapper = (ReactMixitupWrapper: WrapperType) => {
+  return React.forwardRef((props: WrapperProps, ref) => (
+    <ReactMixitupWrapper {...props} ref={ref} />
+  ))
+}
+
+const ReactMixitup = ({
+  items: unparsedItems,
+  duration = 500,
+  renderCells,
+  Wrapper: ReactMixitupWrapper = makeWrapper('div')
+}: Props) => {
+  const Wrapper = React.useMemo(() => makeWrapper(ReactMixitupWrapper), [ReactMixitupWrapper])
+
   const items: Items = unparsedItems.map(key => key.toString())
   const [{ hash, animate, mount, commit }, dispatch] = React.useReducer(reducer, items, init)
   const refs = React.useRef<{
@@ -250,11 +263,16 @@ const ReactMixitup = ({ items: unparsedItems, duration = 500, renderCells }: Pro
 
   React.useEffect(() => {
     let timer: number
+    let unmounted = false
     const clear = () => {
+      unmounted = true
       window.clearTimeout(timer)
     }
     if (animate) {
       timer = window.setTimeout(() => {
+        if (unmounted) {
+          return
+        }
         dispatch({
           type: 'STOP_ANIMATION'
         })

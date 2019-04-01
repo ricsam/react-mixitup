@@ -45,7 +45,7 @@ const CellWrapper = styled.div`
   }}
 `
 
-function getRows(arr, rowSize: number) {
+function getRows(arr, rowSize) {
   if (arr.length < rowSize) {
     return [arr]
   }
@@ -60,6 +60,11 @@ function getRows(arr, rowSize: number) {
   return rows
 }
 
+const Wrapper = styled.div`
+  transition: height 0.5s ease;
+  border: 1px solid black;
+`;
+
 class Example extends React.Component {
   state = { items: [1, 2, 3, 4] }
 
@@ -73,6 +78,7 @@ class Example extends React.Component {
       <Fragment>
         <button onClick={this.shuffle}>Shuffle</button>
         <ReactMixitup
+          Wrapper={Wrapper}
           items={this.state.items}
           renderCells={items => (
             <div style={{ background: 'yellow', display: 'flex' }}>

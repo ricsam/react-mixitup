@@ -17,7 +17,7 @@
       "node_modules/@types"
     ]
   },
-  "include": [
-    "src"
+  "files": [
+    "src/react-mixitup.tsx"
   ]
 }
