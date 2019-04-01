@@ -30,6 +30,7 @@ type WrapperProps = {
   style?: React.CSSProperties
   ref?: React.Ref<HTMLElement>
 }
+
 type WrapperType = any
 
 type Props = {
