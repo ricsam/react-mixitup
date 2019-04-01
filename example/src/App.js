@@ -63,7 +63,7 @@ function getRows(arr, rowSize) {
 const Wrapper = styled.div`
   transition: height 0.5s ease;
   border: 1px solid black;
-`;
+`
 
 class Example extends React.Component {
   state = { items: [1, 2, 3, 4] }
@@ -139,15 +139,20 @@ export default class App extends Component {
         <Example />
         <ThemeProvider theme={{ viewport, margins: margins, numberOfCols: numberOfCols }}>
           <Fragment>
-            {/* <button onClick={this.shuffle}>Shuffle</button>
-        <ReactMixitup
-          viewport={viewport}
-          items={this.state.items.map((ii) => ({
-            Cell: () => <Box key={ii}>{ii}</Box>,
-            key: ii,
-          }))}
-          duration={5000}
-        /> */}
+            <button onClick={this.shuffle}>Shuffle</button>
+            <ReactMixitup
+              Wrapper="div"
+              transition={false}
+              items={this.state.items}
+              renderCells={items =>
+                items.map(({ key, ref, style }) => (
+                  <Box key={key} ref={ref} style={style}>
+                    {key}
+                  </Box>
+                ))
+              }
+              duration={5000}
+            />
             <button onClick={this.toggleSubset}>Toggle subset</button>
             <ReactMixitup
               items={this.state.subset}

@@ -2,7 +2,7 @@
  * @class ReactMixitup
  */
 
-import React from 'react'
+import React, { ReactHTMLElement } from 'react'
 import uniq from 'lodash.uniq'
 
 type Position = {
@@ -28,7 +28,7 @@ type Items = Array<Item>
 type WrapperProps = {
   children: React.ReactNode
   style?: React.CSSProperties
-  ref?: React.Ref<HTMLElement>
+  ref?: React.Ref<any>
 }
 
 type WrapperType = any
@@ -39,11 +39,12 @@ type Props = {
   renderCells: (
     items: {
       key: string
-      ref?: (el: HTMLElement | null) => void
+      ref?: React.Ref<HTMLElement>
       style?: React.CSSProperties
     }[]
   ) => React.ReactNode
   Wrapper: WrapperType
+  transition: boolean
 }
 
 type Action = {
@@ -51,6 +52,7 @@ type Action = {
   hash?: string | null
   key?: string
   el?: HTMLElement | null
+  transition?: boolean
 }
 
 const OuterBound = React.memo(
@@ -97,7 +99,7 @@ function reducer(state: State, action: Action): State {
         throw new Error()
       }
       let mount = true
-      if (state.firstRender || state.animate || state.mount || state.commit) {
+      if (state.firstRender || state.animate || state.mount || state.commit || !action.transition) {
         mount = false
       }
       return {
@@ -168,7 +170,8 @@ const ReactMixitup = ({
   items: unparsedItems,
   duration = 500,
   renderCells,
-  Wrapper: ReactMixitupWrapper = makeWrapper('div')
+  Wrapper: ReactMixitupWrapper = 'div',
+  transition = true
 }: Props) => {
   const Wrapper = React.useMemo(() => makeWrapper(ReactMixitupWrapper), [ReactMixitupWrapper])
 
@@ -236,10 +239,11 @@ const ReactMixitup = ({
     if (newGrid) {
       dispatch({
         type: 'SET_HASH',
-        hash: newHash
+        hash: newHash,
+        transition
       })
     }
-  }, [newHash, newGrid])
+  }, [newHash, newGrid, transition])
 
   React.useEffect(() => {
     if (mount) {
@@ -342,6 +346,18 @@ const ReactMixitup = ({
       })}
     </AbsoluteWrapper>
   ) : null
+
+  if (!transition) {
+    return (
+      <OuterBound>
+        <Wrapper>
+          {rows({
+            itemsToRender: currentItems
+          })}
+        </Wrapper>
+      </OuterBound>
+    )
+  }
 
   let child = (
     <>
