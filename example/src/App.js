@@ -142,7 +142,6 @@ export default class App extends Component {
             <button onClick={this.shuffle}>Shuffle</button>
             <ReactMixitup
               Wrapper="div"
-              transition={false}
               items={this.state.items}
               renderCells={items =>
                 items.map(({ key, ref, style }) => (

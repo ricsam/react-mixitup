@@ -1,10 +1,11 @@
 {
   "extends": [
-    "tslint-config-standard",
-    "tslint-config-prettier",
-    "tslint-react"
+    "tslint:recommended",
+    "tslint-react",
+    "tslint-config-prettier"
   ],
   "rules": {
-    "jsx-no-multiline-js": false
+    "jsx-no-multiline-js": false,
+    "object-literal-sort-keys": false
   }
 }

@@ -1,0 +1,49 @@
+{
+  "config": {
+    "title": "React Mixitup",
+    "description": "Animate the addition, removal and shuffling of elements.",
+    "menu": [],
+    "version": "0.0.0-development",
+    "repository": "https://github.com/ricsam/react-mixitup",
+    "native": false,
+    "codeSandbox": true,
+    "themeConfig": {},
+    "separator": "-",
+    "files": "documentation/*.{md,markdown,mdx}",
+    "ignore": [
+      "readme.md",
+      "changelog.md",
+      "code-of-conduct.md",
+      "contributing.md",
+      "license.md"
+    ],
+    "dest": "docs/docs"
+  },
+  "entries": [
+    {
+      "key": "documentation/usage.mdx",
+      "value": {
+        "name": "Usage",
+        "id": "bf740799fc727f53e764db7d14051d08",
+        "filepath": "documentation/usage.mdx",
+        "link": "https://github.com/ricsam/react-mixitup/edit/master/documentation/usage.mdx",
+        "slug": "documentation-usage",
+        "route": "/documentation-usage",
+        "menu": "",
+        "headings": [
+          {
+            "slug": "hello-world",
+            "depth": 1,
+            "value": "Hello world"
+          }
+        ]
+      }
+    }
+  ],
+  "props": [
+    {
+      "key": "documentation/shuffle.tsx",
+      "value": []
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "commonjs"
+  },
+  "files": [
+    "src/react-mixitup.tsx",
+    "test/react-mixitup.test.tsx",
+  ]
+}

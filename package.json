@@ -25,21 +25,24 @@
     "node": ">=6.0.0"
   },
   "scripts": {
+    "build:docs": "typedoc --out docs/api --target es6 --theme minimal --mode file src",
+    "build": "yarn run compile && yarn run build:docs && yarn run docz:build",
+    "commit": "git-cz",
+    "compile": "tsc --module commonjs && rollup -c rollup.config.ts",
+    "deploy-docs": "ts-node tools/gh-pages-publish",
+    "docz:build": "docz build --typescript",
+    "docz:dev": "docz dev --typescript",
     "lint": "tslint  --project tsconfig.json -t codeFrame 'src/**/*.ts' 'test/**/*.ts'",
     "prebuild": "rimraf dist",
-    "build": "yarn run compile && typedoc --out docs --target es6 --theme minimal --mode file src",
-    "compile": "tsc --module commonjs && rollup -c rollup.config.ts",
-    "start": "rollup -c rollup.config.ts -w",
-    "test": "jest",
-    "test:coverage": "jest --coverage",
-    "test:watch": "yarn run test:coverage --watch",
-    "test:prod": "npm run lint && npm run test -- --no-cache",
-    "deploy-docs": "ts-node tools/gh-pages-publish",
+    "precommit": "lint-staged",
     "report-coverage": "cat ./coverage/lcov.info | coveralls",
-    "commit": "git-cz",
-    "semantic-release": "semantic-release",
     "semantic-release-prepare": "ts-node tools/semantic-release-prepare",
-    "precommit": "lint-staged"
+    "semantic-release": "semantic-release",
+    "start": "rollup -c rollup.config.ts -w",
+    "test:coverage": "yarn run test -- --coverage",
+    "test:prod": "npm run lint && npm run test -- --no-cache",
+    "test:watch": "react-scripts-ts test --env=jsdom",
+    "test": "cross-env CI=1 react-scripts-ts test --env=jsdom"
   },
   "lint-staged": {
     "{src,test}/**/*.{ts,tsx}": [
@@ -53,20 +56,6 @@
     }
   },
   "jest": {
-    "transform": {
-      ".(ts|tsx)": "ts-jest"
-    },
-    "testEnvironment": "node",
-    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js"
-    ],
-    "coveragePathIgnorePatterns": [
-      "/node_modules/",
-      "/test/"
-    ],
     "coverageThreshold": {
       "global": {
         "branches": 90,
@@ -80,7 +69,7 @@
     ]
   },
   "prettier": {
-    "semi": false,
+    "semi": true,
     "singleQuote": true
   },
   "commitlint": {
@@ -94,20 +83,23 @@
     "@types/jest": "^23.3.2",
     "@types/lodash.uniq": "^4.5.6",
     "@types/node": "^10.11.0",
-    "@types/react": "^16.8.10",
+    "@types/react": "^16.8.13",
+    "@types/react-dom": "^16.8.3",
     "colors": "^1.3.2",
     "commitizen": "^3.0.0",
     "coveralls": "^3.0.2",
     "cross-env": "^5.2.0",
     "cz-conventional-changelog": "^2.1.0",
+    "docz": "^1.0.0-rc.9",
+    "docz-theme-default": "^1.0.0-rc.9",
     "husky": "^1.0.1",
-    "jest": "^23.6.0",
-    "jest-config": "^23.6.0",
     "lint-staged": "^8.0.0",
     "lodash.camelcase": "^4.3.0",
     "prettier": "^1.14.3",
     "prompt": "^1.0.0",
     "react": "^16.8.6",
+    "react-dom": "^16.8.6",
+    "react-scripts-ts": "^3.1.0",
     "replace-in-file": "^3.4.2",
     "rimraf": "^2.6.2",
     "rollup": "^0.67.0",
@@ -119,7 +111,6 @@
     "rollup-plugin-typescript2": "^0.18.0",
     "semantic-release": "^15.13.3",
     "shelljs": "^0.8.3",
-    "ts-jest": "^23.10.2",
     "ts-node": "^7.0.1",
     "tslint": "^5.11.0",
     "tslint-config-prettier": "^1.15.0",

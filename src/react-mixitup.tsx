@@ -2,481 +2,494 @@
  * @class ReactMixitup
  */
 
-import React, { ReactHTMLElement } from 'react'
-import uniq from 'lodash.uniq'
+import uniq from 'lodash.uniq';
+import * as React from 'react';
 
-type Position = {
-  x: number
-  y: number
-  z?: number
+interface IPosition {
+  x: number;
+  y: number;
+  z?: number;
 }
-type Positions = {
-  [key: string]: Position
+interface IPositions {
+  [key: string]: IPosition;
 }
-type State = {
-  hash: null | string
-  mount: boolean
-  commit: boolean
-  animate: boolean
-  firstRender: boolean
-}
-
-type UnparsedItems = Array<string | number | boolean>
-type Item = string
-type Items = Array<Item>
-
-type WrapperProps = {
-  children: React.ReactNode
-  style?: React.CSSProperties
-  ref?: React.Ref<any>
+interface IState {
+  hash: null | string;
+  mount: boolean;
+  commit: boolean;
+  animate: boolean;
+  firstRender: boolean;
 }
 
-type WrapperType = any
+type UnparsedItems = Array<string | number | boolean>;
+type Item = string;
+type Items = Item[];
 
-type Props = {
-  items: UnparsedItems
-  duration: number
+interface IWrapperProps {
+  children: React.ReactNode;
+  style?: React.CSSProperties;
+  ref?: React.Ref<any>;
+}
+
+type WrapperType = any;
+
+interface IProps {
+  items: UnparsedItems;
+  duration?: number;
   renderCells: (
-    items: {
-      key: string
-      ref?: React.Ref<HTMLElement>
-      style?: React.CSSProperties
-    }[]
-  ) => React.ReactNode
-  Wrapper: WrapperType
-  transition: boolean
+    items: Array<{
+      key: string;
+      ref?: React.Ref<any>;
+      style?: React.CSSProperties;
+    }>
+  ) => React.ReactNode;
+  Wrapper?: WrapperType;
+  transition?: boolean;
 }
 
-type Action = {
-  type: 'SET_HASH' | 'STOP_ANIMATION' | 'ANIMATE' | 'COMMIT'
-  hash?: string | null
-  key?: string
-  el?: HTMLElement | null
-  transition?: boolean
+interface IAction {
+  type: 'SET_HASH' | 'STOP_ANIMATION' | 'ANIMATE' | 'COMMIT';
+  hash?: string | null;
+  key?: string;
+  el?: HTMLElement | null;
+  transition?: boolean;
 }
 
 const OuterBound = React.memo(
   React.forwardRef((props: { children: React.ReactNode }, ref?: React.Ref<any>) => (
     <div style={{ position: 'relative' }} {...props} ref={ref} />
   ))
-)
+);
 
-const AbsoluteWrapper = React.memo(
-  React.forwardRef((props: { children: React.ReactNode }, ref?: React.Ref<any>) => (
-    <div
-      style={{
-        position: 'absolute',
-        top: '0',
-        left: '0',
-        right: '0',
-        visibility: 'hidden',
-        zIndex: -1
-      }}
-      {...props}
-      ref={ref}
-    />
-  ))
-)
-
-function init(): State {
+function init(): IState {
   return {
-    hash: null,
-    mount: false,
-    commit: false,
     animate: false,
-    firstRender: true
-  }
+    commit: false,
+    firstRender: true,
+    hash: null,
+    mount: false
+  };
 }
 
 const getItemsHash = (items: Items): string => {
-  return items.join(',')
-}
+  return items.join(',');
+};
 
-function reducer(state: State, action: Action): State {
+function reducer(state: IState, action: IAction): IState {
   switch (action.type) {
     case 'SET_HASH':
       if (typeof action.hash === 'undefined') {
-        throw new Error()
+        throw new Error();
       }
-      let mount = true
+      let mount = true;
       if (state.firstRender || state.animate || state.mount || state.commit || !action.transition) {
-        mount = false
+        mount = false;
       }
       return {
         ...state,
         hash: action.hash,
         firstRender: false,
         mount
-      }
+      };
     case 'COMMIT':
       return {
         ...state,
         commit: true,
         mount: false
-      }
+      };
     case 'ANIMATE':
       return {
         ...state,
         animate: true,
         commit: false
-      }
+      };
     case 'STOP_ANIMATION':
       return {
         ...state,
         animate: false,
         mount: false
-      }
+      };
     default:
-      throw new Error()
+      throw new Error();
   }
 }
 
 const getConfig = ({ currentItems, nextItems }: { currentItems: Items; nextItems: Items }) => {
   const addedItems = nextItems.filter(currentKey => {
-    return !currentItems.includes(currentKey)
-  })
+    return !currentItems.includes(currentKey);
+  });
   const removedItems = currentItems.filter(previousKey => {
-    return !nextItems.includes(previousKey)
-  })
-
-  const shuffledItems = nextItems.filter((currentKey, index) => {
-    return (
-      !addedItems.includes(currentKey) &&
-      !removedItems.includes(currentKey) &&
-      index !== currentItems.indexOf(currentKey)
-    )
-  })
+    return !nextItems.includes(previousKey);
+  });
 
   return {
     addedItems,
-    removedItems,
-    shuffledItems
-  }
-}
+    removedItems
+  };
+};
 
 function onNextFrame(callback: () => any) {
-  setTimeout(function() {
-    window.requestAnimationFrame(callback)
-  }, 0)
+  setTimeout(() => {
+    window.requestAnimationFrame(callback);
+  }, 0);
 }
+
+const makeAbsoluteWrapper = (Wrapper: React.JSXElementConstructor<any>) =>
+  React.memo(
+    React.forwardRef((props: { children: React.ReactNode }, ref?: React.Ref<any>) => (
+      <Wrapper
+        style={{
+          position: 'absolute',
+          top: '0',
+          left: '0',
+          right: '0',
+          visibility: 'hidden',
+          zIndex: -1
+        }}
+        {...props}
+        ref={ref}
+      />
+    ))
+  );
 
 const makeWrapper = (ReactMixitupWrapper: WrapperType) => {
-  return React.forwardRef((props: WrapperProps, ref) => (
-    <ReactMixitupWrapper {...props} ref={ref} />
-  ))
-}
+  return React.memo(
+    React.forwardRef((props: IWrapperProps, ref) => <ReactMixitupWrapper {...props} ref={ref} />)
+  );
+};
 
-const ReactMixitup = ({
-  items: unparsedItems,
-  duration = 500,
-  renderCells,
-  Wrapper: ReactMixitupWrapper = 'div',
-  transition = true
-}: Props) => {
-  const Wrapper = React.useMemo(() => makeWrapper(ReactMixitupWrapper), [ReactMixitupWrapper])
+const ReactMixitup = React.memo(
+  React.forwardRef(
+    (
+      {
+        items: unparsedItems,
+        duration = 500,
+        renderCells,
+        Wrapper: ReactMixitupWrapper = 'div',
+        transition = true
+      }: IProps,
+      outerBoundRef: React.Ref<HTMLDivElement>
+    ): JSX.Element | null => {
+      const Wrapper = React.useMemo(() => makeWrapper(ReactMixitupWrapper), [ReactMixitupWrapper]);
+      const AbsoluteWrapper = React.useMemo(() => makeAbsoluteWrapper(Wrapper), [Wrapper]);
 
-  const items: Items = unparsedItems.map(key => key.toString())
-  const [{ hash, animate, mount, commit }, dispatch] = React.useReducer(reducer, items, init)
-  const refs = React.useRef<{
-    containerHeight: {
-      current: number | null
-      previous: number | null
-    }
-    previousPositions: Positions
-    currentPositions: Positions
-    currentItems: Items
-    previousItems: Items
-    config: {
-      addedItems: Items
-      removedItems: Items
-      shuffledItems: Items
-    }
-    persistedElement: React.ReactNode
-  }>({
-    containerHeight: { current: null, previous: null },
-    previousPositions: {},
-    currentPositions: {},
-    currentItems: items,
-    previousItems: [],
-    config: {
-      addedItems: [],
-      removedItems: [],
-      shuffledItems: []
-    },
-    persistedElement: null
-  })
-  let newHash: string | null = getItemsHash(items)
-  let newGrid = newHash !== hash
-  /* just to handle if clicking really fast, then ignore the update */
-  if (mount || commit) {
-    newGrid = false
-    newHash = hash
-  }
+      const items: Items = unparsedItems.map(key => key.toString());
+      const [{ hash, animate, mount, commit }, unsafeDispatch] = React.useReducer(
+        reducer,
+        items,
+        init
+      );
 
-  if (newGrid) {
-    refs.current.config = getConfig({
-      currentItems: refs.current.currentItems,
-      nextItems: items
-    })
+      const unmounted = React.useRef(false);
+      React.useEffect(
+        () => () => {
+          unmounted.current = true;
+        },
+        []
+      );
 
-    /* START UPDATE */
-    if (!animate) {
-      refs.current.previousItems = refs.current.currentItems
-    }
-    refs.current.currentItems = items
-    /* END UPDATE */
-  }
-
-  const {
-    previousPositions,
-    currentPositions,
-    currentItems,
-    previousItems,
-    config: { addedItems, removedItems, shuffledItems }
-  } = refs.current
-
-  React.useEffect(() => {
-    if (newGrid) {
-      dispatch({
-        type: 'SET_HASH',
-        hash: newHash,
-        transition
-      })
-    }
-  }, [newHash, newGrid, transition])
-
-  React.useEffect(() => {
-    if (mount) {
-      /* make sure the mount has been committed to the DOM, double make sure by wrapping in onNextFrame */
-      onNextFrame(() => {
-        dispatch({
-          type: 'COMMIT'
-        })
-      })
-    }
-  }, [mount])
-
-  React.useEffect(() => {
-    if (commit) {
-      onNextFrame(() => {
-        dispatch({
-          type: 'ANIMATE'
-        })
-      })
-    }
-  }, [commit])
-
-  React.useEffect(() => {
-    let timer: number
-    let unmounted = false
-    const clear = () => {
-      unmounted = true
-      window.clearTimeout(timer)
-    }
-    if (animate) {
-      timer = window.setTimeout(() => {
-        if (unmounted) {
-          return
+      const dispatch = React.useCallback((action: IAction) => {
+        if (unmounted.current) {
+          return;
         }
-        dispatch({
-          type: 'STOP_ANIMATION'
-        })
-      }, duration)
-    } else {
-      clear()
-    }
-    return clear
-  }, [animate, newHash])
+        unsafeDispatch(action);
+      }, []);
 
-  if (commit) {
-    return refs.current.persistedElement
-  }
-
-  const rows = ({
-    itemsToRender,
-    ref,
-    style
-  }: {
-    itemsToRender: Items
-    ref?: (key: string, el: HTMLElement) => void
-    style?: (key: string) => React.CSSProperties
-  }) => {
-    const makeRef = (key: string) => {
-      if (typeof ref === 'undefined') {
-        return
+      const refs = React.useRef<{
+        containerHeight: {
+          current: number | null;
+          previous: number | null;
+        };
+        previousPositions: IPositions;
+        currentPositions: IPositions;
+        currentItems: Items;
+        previousItems: Items;
+        config: {
+          addedItems: Items;
+          removedItems: Items;
+        };
+        persistedElement: JSX.Element | null;
+      }>({
+        containerHeight: { current: null, previous: null },
+        previousPositions: {},
+        currentPositions: {},
+        currentItems: items,
+        previousItems: [],
+        config: {
+          addedItems: [],
+          removedItems: []
+        },
+        persistedElement: null
+      });
+      let newHash: string | null = getItemsHash(items);
+      let newGrid = newHash !== hash;
+      /* just to handle if clicking really fast, then ignore the update */
+      if (mount || commit) {
+        newGrid = false;
+        newHash = hash;
       }
-      return (el: HTMLElement | null) => {
-        if (el) {
-          ref(key, el)
+
+      if (newGrid) {
+        refs.current.config = getConfig({
+          currentItems: refs.current.currentItems,
+          nextItems: items
+        });
+
+        /* START UPDATE */
+        if (!animate) {
+          refs.current.previousItems = refs.current.currentItems;
         }
+        refs.current.currentItems = items;
+        /* END UPDATE */
       }
-    }
 
-    const makeStyle = (key: string) => {
-      return typeof style !== 'undefined' ? style(key) : undefined
-    }
+      const {
+        previousPositions,
+        currentPositions,
+        currentItems,
+        previousItems,
+        config: { addedItems, removedItems }
+      } = refs.current;
 
-    return renderCells(
-      itemsToRender.map(key => ({
-        key,
-        ref: makeRef(key),
-        style: makeStyle(key)
-      }))
-    )
-  }
-  const wrapperMeasureContainerHeight = (context: 'previous' | 'current') => (
-    el: HTMLElement | null
-  ) => {
-    if (!el) {
-      return
-    }
-    refs.current.containerHeight[context] = el.offsetHeight
-  }
+      React.useEffect(() => {
+        if (newGrid) {
+          dispatch({
+            type: 'SET_HASH',
+            hash: newHash,
+            transition
+          });
+        }
+      }, [newHash, newGrid, transition]);
 
-  const measureNewGrid = newGrid ? (
-    <AbsoluteWrapper ref={wrapperMeasureContainerHeight('current')}>
-      {rows({
-        itemsToRender: currentItems,
-        ref: (key, el) => {
-          currentPositions[key] = {
-            x: el.offsetLeft,
-            y: el.offsetTop
+      React.useEffect(() => {
+        if (mount) {
+          /* make sure the mount has been committed to the DOM, double make sure by wrapping in onNextFrame */
+          onNextFrame(() => {
+            dispatch({
+              type: 'COMMIT'
+            });
+          });
+        }
+      }, [mount]);
+
+      React.useEffect(() => {
+        if (commit) {
+          onNextFrame(() => {
+            dispatch({
+              type: 'ANIMATE'
+            });
+          });
+        }
+      }, [commit]);
+
+      React.useEffect(() => {
+        let timer: number;
+        const clear = () => {
+          window.clearTimeout(timer);
+        };
+        if (animate) {
+          timer = window.setTimeout(() => {
+            dispatch({
+              type: 'STOP_ANIMATION'
+            });
+          }, duration);
+        } else {
+          clear();
+        }
+        return clear;
+      }, [animate, newHash]);
+
+      if (commit) {
+        return refs.current.persistedElement;
+      }
+
+      const rows = ({
+        itemsToRender,
+        ref,
+        style
+      }: {
+        itemsToRender: Items;
+        ref?: (key: string, el: HTMLElement) => void;
+        style?: (key: string) => React.CSSProperties;
+      }) => {
+        const makeRef = (key: string) => {
+          if (typeof ref === 'undefined') {
+            return;
           }
+          return (el: HTMLElement | null) => {
+            if (el) {
+              ref(key, el);
+            }
+          };
+        };
+
+        const makeStyle = (key: string) => {
+          return typeof style !== 'undefined' ? style(key) : undefined;
+        };
+
+        return renderCells(
+          itemsToRender.map(key => ({
+            key,
+            ref: makeRef(key),
+            style: makeStyle(key)
+          }))
+        );
+      };
+      const wrapperMeasureContainerHeight = (context: 'previous' | 'current') => (
+        el: HTMLElement | null
+      ) => {
+        if (!el) {
+          return;
         }
-      })}
-    </AbsoluteWrapper>
-  ) : null
+        refs.current.containerHeight[context] = el.offsetHeight;
+      };
 
-  if (!transition) {
-    return (
-      <OuterBound>
-        <Wrapper>
+      const measureNewGrid = newGrid ? (
+        <AbsoluteWrapper ref={wrapperMeasureContainerHeight('current')}>
           {rows({
-            itemsToRender: currentItems
-          })}
-        </Wrapper>
-      </OuterBound>
-    )
-  }
-
-  let child = (
-    <>
-      <Wrapper>
-        {rows({
-          itemsToRender: currentItems
-        })}
-      </Wrapper>
-      {measureNewGrid}
-    </>
-  )
-
-  if (newGrid) {
-    child = (
-      <>
-        <Wrapper ref={wrapperMeasureContainerHeight('previous')}>
-          {rows({
-            itemsToRender: previousItems,
+            itemsToRender: currentItems,
             ref: (key, el) => {
-              if (el) {
-                previousPositions[key] = {
-                  x: el.offsetLeft,
-                  y: el.offsetTop
+              currentPositions[key] = {
+                x: el.offsetLeft,
+                y: el.offsetTop
+              };
+            }
+          })}
+        </AbsoluteWrapper>
+      ) : null;
+
+      if (!transition) {
+        return (
+          <OuterBound ref={outerBoundRef}>
+            <Wrapper>
+              {rows({
+                itemsToRender: currentItems
+              })}
+            </Wrapper>
+          </OuterBound>
+        );
+      }
+
+      let child = (
+        <>
+          <Wrapper>
+            {rows({
+              itemsToRender: currentItems
+            })}
+          </Wrapper>
+          {measureNewGrid}
+        </>
+      );
+
+      if (newGrid) {
+        child = (
+          <>
+            <Wrapper ref={wrapperMeasureContainerHeight('previous')}>
+              {rows({
+                itemsToRender: previousItems,
+                ref: (key, el) => {
+                  if (el) {
+                    previousPositions[key] = {
+                      x: el.offsetLeft,
+                      y: el.offsetTop
+                    };
+                  }
                 }
-              }
-            }
-          })}
-        </Wrapper>
-        {measureNewGrid}
-      </>
-    )
-  }
+              })}
+            </Wrapper>
+            {measureNewGrid}
+          </>
+        );
+      }
 
-  const animationRenderItems = uniq([...previousItems, ...addedItems, ...removedItems]).sort()
+      const animationRenderItems = uniq([...previousItems, ...addedItems, ...removedItems]).sort();
 
-  if (mount) {
-    child = (
-      <>
-        <Wrapper style={{ height: refs.current.containerHeight.previous + 'px' }}>
-          {rows({
-            itemsToRender: animationRenderItems,
-            style(key) {
-              const added = addedItems.includes(key)
-              const removed = removedItems.includes(key)
-              const { x, y } = added ? currentPositions[key] : previousPositions[key]
+      if (mount) {
+        child = (
+          <>
+            <Wrapper style={{ height: refs.current.containerHeight.previous + 'px' }}>
+              {rows({
+                itemsToRender: animationRenderItems,
+                style(key) {
+                  const added = addedItems.includes(key);
+                  const removed = removedItems.includes(key);
+                  const { x, y } = added ? currentPositions[key] : previousPositions[key];
 
-              let z = 1
+                  let z = 1;
 
-              if (added) {
-                z = 0
-              }
+                  if (added) {
+                    z = 0;
+                  }
 
-              if (removed) {
-                z = 1
-              }
+                  if (removed) {
+                    z = 1;
+                  }
 
-              const transform = `translate3d(${[x, y, 0].join('px,')}px) scale(${z})`
+                  const transform = `translate3d(${[x, y, 0].join('px,')}px) scale(${z})`;
 
-              const style: React.CSSProperties = {
-                transform,
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                margin: 0
-              }
+                  const style: React.CSSProperties = {
+                    transform,
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    margin: 0
+                  };
 
-              return style
-            }
-          })}
-        </Wrapper>
-      </>
-    )
-  }
+                  return style;
+                }
+              })}
+            </Wrapper>
+          </>
+        );
+      }
 
-  if (animate) {
-    child = (
-      <>
-        <Wrapper style={{ height: refs.current.containerHeight.current + 'px' }}>
-          {rows({
-            itemsToRender: animationRenderItems,
-            style(key) {
-              const added = addedItems.includes(key)
-              const removed = removedItems.includes(key)
-              /* currentPositions[key] can be undefined if new items are
+      if (animate) {
+        child = (
+          <>
+            <Wrapper style={{ height: refs.current.containerHeight.current + 'px' }}>
+              {rows({
+                itemsToRender: animationRenderItems,
+                style(key) {
+                  const added = addedItems.includes(key);
+                  const removed = removedItems.includes(key);
+                  /* currentPositions[key] can be undefined if new items are
                  added during animate and are yet to be measured */
-              const { x = 0, y = 0 } = currentPositions[key] || {}
+                  const { x = 0, y = 0 } = currentPositions[key] || {};
 
-              let z = 1
+                  let z = 1;
 
-              if (added) {
-                z = 1
-              }
+                  if (added) {
+                    z = 1;
+                  }
 
-              if (removed) {
-                z = 0
-              }
+                  if (removed) {
+                    z = 0;
+                  }
 
-              const transform = `translate3d(${[x, y, 0].join('px,')}px) scale(${z})`
+                  const transform = `translate3d(${[x, y, 0].join('px,')}px) scale(${z})`;
 
-              const style: React.CSSProperties = {
-                transform,
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                margin: 0,
-                transition: `transform ${duration}ms ease`
-              }
-              return style
-            }
-          })}
-        </Wrapper>
-        {measureNewGrid}
-      </>
-    )
-  }
+                  const style: React.CSSProperties = {
+                    transform,
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    margin: 0,
+                    transition: `transform ${duration}ms ease`
+                  };
+                  return style;
+                }
+              })}
+            </Wrapper>
+            {measureNewGrid}
+          </>
+        );
+      }
 
-  refs.current.persistedElement = <OuterBound>{child}</OuterBound>
+      refs.current.persistedElement = <OuterBound ref={outerBoundRef}>{child}</OuterBound>;
 
-  return refs.current.persistedElement
-}
+      return refs.current.persistedElement;
+    }
+  )
+);
 
-export default ReactMixitup
+export default ReactMixitup;
