@@ -2,6 +2,7 @@
  * @class ReactMixitup
  */
 
+import flatten from 'lodash.flatten';
 import uniq from 'lodash.uniq';
 import * as React from 'react';
 
@@ -13,12 +14,18 @@ interface IPosition {
 interface IPositions {
   [key: string]: IPosition;
 }
-interface IState {
+interface IReducerState {
   hash: null | string;
   mount: boolean;
   commit: boolean;
   animate: boolean;
   firstRender: boolean;
+}
+
+interface IState {
+  containerHeight: number | null;
+  items: Items;
+  positions: IPositions;
 }
 
 type UnparsedItems = Array<string | number | boolean>;
@@ -61,7 +68,7 @@ const OuterBound = React.memo(
   ))
 );
 
-function init(): IState {
+function init(): IReducerState {
   return {
     animate: false,
     commit: false,
@@ -75,14 +82,19 @@ const getItemsHash = (items: Items): string => {
   return items.join(',');
 };
 
-function reducer(state: IState, action: IAction): IState {
+function reducer(state: IReducerState, action: IAction): IReducerState {
   switch (action.type) {
     case 'SET_HASH':
       if (typeof action.hash === 'undefined') {
         throw new Error();
       }
       let mount = true;
-      if (state.firstRender || state.animate || state.mount || state.commit || !action.transition) {
+      if (
+        state.firstRender ||
+        state.mount ||
+        state.commit /* || state.animate */ ||
+        !action.transition
+      ) {
         mount = false;
       }
       return {
@@ -113,20 +125,6 @@ function reducer(state: IState, action: IAction): IState {
       throw new Error();
   }
 }
-
-const getConfig = ({ currentItems, nextItems }: { currentItems: Items; nextItems: Items }) => {
-  const addedItems = nextItems.filter(currentKey => {
-    return !currentItems.includes(currentKey);
-  });
-  const removedItems = currentItems.filter(previousKey => {
-    return !nextItems.includes(previousKey);
-  });
-
-  return {
-    addedItems,
-    removedItems
-  };
-};
 
 function onNextFrame(callback: () => any) {
   setTimeout(() => {
@@ -196,29 +194,16 @@ const ReactMixitup = React.memo(
       }, []);
 
       const refs = React.useRef<{
-        containerHeight: {
-          current: number | null;
-          previous: number | null;
-        };
-        previousPositions: IPositions;
-        currentPositions: IPositions;
-        currentItems: Items;
-        previousItems: Items;
-        config: {
-          addedItems: Items;
-          removedItems: Items;
-        };
+        states: IState[];
         persistedElement: JSX.Element | null;
       }>({
-        containerHeight: { current: null, previous: null },
-        previousPositions: {},
-        currentPositions: {},
-        currentItems: items,
-        previousItems: [],
-        config: {
-          addedItems: [],
-          removedItems: []
-        },
+        states: [
+          {
+            items,
+            positions: {},
+            containerHeight: null
+          }
+        ],
         persistedElement: null
       });
       let newHash: string | null = getItemsHash(items);
@@ -229,27 +214,23 @@ const ReactMixitup = React.memo(
         newHash = hash;
       }
 
+      let currentState = refs.current.states[refs.current.states.length - 1];
+
       if (newGrid) {
-        refs.current.config = getConfig({
-          currentItems: refs.current.currentItems,
-          nextItems: items
-        });
-
-        /* START UPDATE */
-        if (!animate) {
-          refs.current.previousItems = refs.current.currentItems;
+        const nextState: IState = {
+          items,
+          positions: {},
+          containerHeight: null
+        };
+        if (animate) {
+          refs.current.states.push(nextState);
+        } else {
+          refs.current.states = [currentState, nextState];
         }
-        refs.current.currentItems = items;
-        /* END UPDATE */
-      }
 
-      const {
-        previousPositions,
-        currentPositions,
-        currentItems,
-        previousItems,
-        config: { addedItems, removedItems }
-      } = refs.current;
+        currentState = refs.current.states[refs.current.states.length - 1];
+      }
+      const { states } = refs.current;
 
       React.useEffect(() => {
         if (newGrid) {
@@ -299,61 +280,68 @@ const ReactMixitup = React.memo(
         return clear;
       }, [animate, newHash]);
 
+      const measureRef = React.useCallback((key: string, el: HTMLElement) => {
+        // console.log(index, states, key);
+        refs.current.states[refs.current.states.length - 1].positions[key] = {
+          x: el.offsetLeft,
+          y: el.offsetTop
+        };
+      }, []);
+
+      const wrapperMeasureContainerHeight = React.useCallback((el: HTMLElement | null) => {
+        if (!el) {
+          return;
+        }
+        refs.current.states[refs.current.states.length - 1].containerHeight = el.offsetHeight;
+      }, []);
+
+      const rows = React.useCallback(
+        ({
+          itemsToRender,
+          ref,
+          style
+        }: {
+          itemsToRender: Items;
+          ref?: (key: string, el: HTMLElement) => void;
+          style?: (key: string) => React.CSSProperties;
+        }) => {
+          const makeRef = (key: string) => {
+            if (typeof ref === 'undefined') {
+              return;
+            }
+            return (el: HTMLElement | null) => {
+              if (el) {
+                ref(key, el);
+              }
+            };
+          };
+
+          const makeStyle = (key: string) => {
+            return typeof style !== 'undefined' ? style(key) : undefined;
+          };
+
+          return renderCells(
+            itemsToRender.map(key => ({
+              key,
+              ref: makeRef(key),
+              style: makeStyle(key)
+            }))
+          );
+        },
+        [renderCells]
+      );
+
+      const latestIndex = states.length - 1;
+
       if (commit) {
         return refs.current.persistedElement;
       }
 
-      const rows = ({
-        itemsToRender,
-        ref,
-        style
-      }: {
-        itemsToRender: Items;
-        ref?: (key: string, el: HTMLElement) => void;
-        style?: (key: string) => React.CSSProperties;
-      }) => {
-        const makeRef = (key: string) => {
-          if (typeof ref === 'undefined') {
-            return;
-          }
-          return (el: HTMLElement | null) => {
-            if (el) {
-              ref(key, el);
-            }
-          };
-        };
-
-        const makeStyle = (key: string) => {
-          return typeof style !== 'undefined' ? style(key) : undefined;
-        };
-
-        return renderCells(
-          itemsToRender.map(key => ({
-            key,
-            ref: makeRef(key),
-            style: makeStyle(key)
-          }))
-        );
-      };
-      const wrapperMeasureContainerHeight = (context: 'previous' | 'current') => (
-        el: HTMLElement | null
-      ) => {
-        if (!el) {
-          return;
-        }
-        refs.current.containerHeight[context] = el.offsetHeight;
-      };
-
       const measureNewGrid = newGrid ? (
-        <AbsoluteWrapper ref={wrapperMeasureContainerHeight('current')}>
+        <AbsoluteWrapper ref={wrapperMeasureContainerHeight}>
           {rows({
-            itemsToRender: currentItems,
-            ref: (key, el) => {
-              currentPositions[key] = {
-                x: el.offsetLeft,
-                y: el.offsetTop
-              };
-            }
+            itemsToRender: currentState.items,
+            ref: measureRef
           })}
         </AbsoluteWrapper>
       ) : null;
@@ -363,7 +351,7 @@ const ReactMixitup = React.memo(
           <OuterBound ref={outerBoundRef}>
             <Wrapper>
               {rows({
-                itemsToRender: currentItems
+                itemsToRender: currentState.items
               })}
             </Wrapper>
           </OuterBound>
@@ -374,7 +362,7 @@ const ReactMixitup = React.memo(
         <>
           <Wrapper>
             {rows({
-              itemsToRender: currentItems
+              itemsToRender: currentState.items
             })}
           </Wrapper>
           {measureNewGrid}
@@ -382,19 +370,13 @@ const ReactMixitup = React.memo(
       );
 
       if (newGrid) {
+        /* AND !animate AND !mount */
+        /* measure stage */
         child = (
           <>
-            <Wrapper ref={wrapperMeasureContainerHeight('previous')}>
+            <Wrapper>
               {rows({
-                itemsToRender: previousItems,
-                ref: (key, el) => {
-                  if (el) {
-                    previousPositions[key] = {
-                      x: el.offsetLeft,
-                      y: el.offsetTop
-                    };
-                  }
-                }
+                itemsToRender: states.length > 1 ? states[states.length - 2].items : states[0].items
               })}
             </Wrapper>
             {measureNewGrid}
@@ -402,27 +384,61 @@ const ReactMixitup = React.memo(
         );
       }
 
-      const animationRenderItems = uniq([...previousItems, ...addedItems, ...removedItems]).sort();
+      const getItemStateIndexes = (item: string): number[] => {
+        const indexes = [];
+        for (let i = states.length - 1; i >= 0; i -= 1) {
+          const state = states[i];
+          if (state.items.includes(item)) {
+            indexes.push(i);
+          }
+        }
+        return indexes;
+      };
+
+      const allItems = flatten(states.map(({ items: sItems }) => sItems));
+
+      const getLatestPositions = (item: string): IPosition | undefined => {
+        for (let i = states.length - 1; i >= 0; i -= 1) {
+          const state = states[i];
+          if (state.positions[item]) {
+            return state.positions[item];
+          }
+        }
+        return undefined;
+      };
+
+      const animationRenderItems = uniq(allItems)
+        .sort()
+        .filter(getLatestPositions);
 
       if (mount) {
+        // debugger;
         child = (
           <>
-            <Wrapper style={{ height: refs.current.containerHeight.previous + 'px' }}>
+            <Wrapper style={{ height: states[states.length - 2].containerHeight + 'px' }}>
               {rows({
                 itemsToRender: animationRenderItems,
                 style(key) {
-                  const added = addedItems.includes(key);
-                  const removed = removedItems.includes(key);
-                  const { x, y } = added ? currentPositions[key] : previousPositions[key];
-
                   let z = 1;
+                  let x = 0;
+                  let y = 0;
 
-                  if (added) {
-                    z = 0;
+                  const indexes = getItemStateIndexes(key);
+                  if (indexes.length === 0) {
+                    throw new Error('something went wrong in the lib');
                   }
+                  /* the new items (indexes[0] === latestIndex) that has a previous position */
 
-                  if (removed) {
-                    z = 1;
+                  ({ x, y } = states[indexes[0]].positions[key]);
+
+                  if (indexes[0] === latestIndex) {
+                    if (indexes.length > 1) {
+                      /* move from previous position */
+                      ({ x, y } = states[indexes[1]].positions[key]);
+                    } else {
+                      /* appear at current position */
+                      z = 0;
+                    }
                   }
 
                   const transform = `translate3d(${[x, y, 0].join('px,')}px) scale(${z})`;
@@ -444,25 +460,38 @@ const ReactMixitup = React.memo(
       }
 
       if (animate) {
+        // debugger;
         child = (
           <>
-            <Wrapper style={{ height: refs.current.containerHeight.current + 'px' }}>
+            <Wrapper style={{ height: currentState.containerHeight + 'px' }}>
               {rows({
+                /* they must have been measured */
                 itemsToRender: animationRenderItems,
                 style(key) {
-                  const added = addedItems.includes(key);
-                  const removed = removedItems.includes(key);
-                  /* currentPositions[key] can be undefined if new items are
-                 added during animate and are yet to be measured */
-                  const { x = 0, y = 0 } = currentPositions[key] || {};
-
                   let z = 1;
+                  let x = 0;
+                  let y = 0;
 
-                  if (added) {
-                    z = 1;
+                  const indexes = getItemStateIndexes(key);
+                  if (indexes.length === 0) {
+                    throw new Error('something went wrong in the lib');
                   }
 
-                  if (removed) {
+                  const latestPosition = getLatestPositions(key);
+
+                  if (!latestPosition) {
+                    throw new Error('This should not happed since filtering');
+                  }
+
+                  ({ x, y } = latestPosition);
+
+                  // /* was just added */
+                  if (indexes.length === 1 && latestIndex === indexes[0] && mount) {
+                    z = 0;
+                  }
+
+                  /* will be removed */
+                  if (!currentState.items.includes(key)) {
                     z = 0;
                   }
 

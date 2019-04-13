@@ -3,11 +3,6 @@ import PropTypes from 'prop-types';
 import { shuffle, range, uniq } from 'lodash';
 import ReactMixitup from '../src/react-mixitup';
 
-const getItems = () =>
-  uniq(
-    shuffle(range(Math.round(Math.random() * 40)).map(v => v + Math.round(Math.random() * 1)))
-  );
-
 const Wrapper = React.forwardRef(
   (
     { children, style }: { children: React.ReactNode; style: React.CSSProperties },
@@ -29,12 +24,18 @@ const Wrapper = React.forwardRef(
   }
 );
 
-const Shuffle = () => {
-  const [items, setItems] = React.useState(getItems());
+const Swap = () => {
+  const [a, setA] = React.useState(true);
+  const [items, setItems] = React.useState([1, 2, 3]);
 
   const shuffleItems = React.useCallback(() => {
-    setItems(getItems());
-  }, []);
+    setA(!a);
+    if (!a) {
+      setItems([1, 2, 3]);
+    } else {
+      setItems([3, 2, 1]);
+    }
+  }, [a]);
 
   const renderCells = React.useCallback(
     (
@@ -69,9 +70,9 @@ const Shuffle = () => {
 
   return (
     <React.Fragment>
-      <button onClick={shuffleItems}>Shuffle</button>
-      <ReactMixitup items={items} renderCells={renderCells} Wrapper={Wrapper} duration={2500}/>
+      <button onClick={shuffleItems}>Swap</button>
+      <ReactMixitup items={items} renderCells={renderCells} Wrapper={Wrapper} duration={2500} />
     </React.Fragment>
   );
 };
-export default Shuffle;
+export default Swap;
