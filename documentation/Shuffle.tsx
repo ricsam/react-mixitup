@@ -5,7 +5,7 @@ import ReactMixitup from '../src/react-mixitup';
 
 const getItems = () =>
   uniq(
-    shuffle(range(Math.round(Math.random() * 40)).map(v => v + Math.round(Math.random() * 1)))
+    shuffle(range(Math.round(Math.random() * 40)).map(v => v + Math.round(Math.random() * 100)))
   );
 
 const Wrapper = React.forwardRef(
