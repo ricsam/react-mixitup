@@ -54,50 +54,26 @@ ReactMixitup = (props: {
 }) => ReactNode;
 ```
 
-**keys**
-
-```
-string[]
-```
+**keys** `string[]`
 
 An array of unique ids.
 
-**duration**
-
-```
-number
-```
+**duration** `number`
 
 How long should the animation last
 
-**enableTransition**
-
-```
-boolean
-```
+**enableTransition** `boolean`
 
 If false no transition and transform will happend. Items will just be rearanged
 
-**renderCells**
-
-```
-(items: {
-  key: string
-  style: CSSProperties
-  ref?: Ref
-}) => ReactNode
-```
+**renderCells** `(items: { key: string, style: CSSProperties, ref?: Ref }) => ReactNode`
 
 This function will be used to render each cell.
 The library will internaly add the key attribute to each cell so you don't have to do that.
 The style is used to position the cell using css transforms.
 The ref is used to measure the size and current position of the cell.
 
-**Wrapper**
-
-```
-(props: { style: CssProperties, children: ReactNode }) => ReactNode
-```
+**Wrapper** `(props: { style: CssProperties, children: ReactNode }) => ReactNode`
 
 The wrapping component.
 The props.style.height of this component will dynamically change when the items change. The children will be a react component containing the cells.
