@@ -24,13 +24,12 @@ interface IReducerState {
 
 interface IState {
   containerHeight: number | null;
-  items: Items;
+  items: Keys;
   positions: IPositions;
 }
 
-type UnparsedItems = Array<string | number | boolean>;
-type Item = string;
-type Items = Item[];
+type Key = string;
+type Keys = Key[];
 
 interface IWrapperProps {
   children: React.ReactNode;
@@ -41,17 +40,15 @@ interface IWrapperProps {
 type WrapperType = any;
 
 interface IProps {
-  items: UnparsedItems;
+  keys: Keys;
   duration?: number;
-  renderCells: (
-    items: Array<{
-      key: string;
-      ref?: React.Ref<any>;
-      style?: React.CSSProperties;
-    }>
-  ) => React.ReactNode;
+  renderCell: (item: {
+    key: string;
+    style: React.CSSProperties;
+    ref?: React.Ref<any>;
+  }) => React.ReactNode;
   Wrapper?: WrapperType;
-  transition?: boolean;
+  enableTransition?: boolean;
 }
 
 interface IAction {
@@ -78,7 +75,7 @@ function init(): IReducerState {
   };
 }
 
-const getItemsHash = (items: Items): string => {
+const getItemsHash = (items: Keys): string => {
   return items.join(',');
 };
 
@@ -156,22 +153,27 @@ const makeWrapper = (ReactMixitupWrapper: WrapperType) => {
   );
 };
 
-const ReactMixitup = React.memo(
+export const ReactMixitup = React.memo(
   React.forwardRef(
     (
       {
-        items: unparsedItems,
+        keys: unparsedItems,
         duration = 500,
-        renderCells,
+        renderCell,
         Wrapper: ReactMixitupWrapper = 'div',
-        transition = true
+        enableTransition: transitionEnabled = true
       }: IProps,
       outerBoundRef: React.Ref<HTMLDivElement>
     ): JSX.Element | null => {
       const Wrapper = React.useMemo(() => makeWrapper(ReactMixitupWrapper), [ReactMixitupWrapper]);
       const AbsoluteWrapper = React.useMemo(() => makeAbsoluteWrapper(Wrapper), [Wrapper]);
 
-      const items: Items = unparsedItems.map(key => key.toString());
+      /* ensure every item is a string */
+      const items: Keys = unparsedItems.map(key => key.toString());
+      if (new Set(items).size !== items.length) {
+        throw new Error('In prop keys: every key must be unique');
+      }
+
       const [{ hash, animate, mount, commit }, unsafeDispatch] = React.useReducer(
         reducer,
         items,
@@ -237,10 +239,10 @@ const ReactMixitup = React.memo(
           dispatch({
             type: 'SET_HASH',
             hash: newHash,
-            transition
+            transition: transitionEnabled
           });
         }
-      }, [newHash, newGrid, transition]);
+      }, [newHash, newGrid, transitionEnabled]);
 
       React.useEffect(() => {
         if (mount) {
@@ -301,7 +303,7 @@ const ReactMixitup = React.memo(
           ref,
           style
         }: {
-          itemsToRender: Items;
+          itemsToRender: Keys;
           ref?: (key: string, el: HTMLElement) => void;
           style?: (key: string) => React.CSSProperties;
         }) => {
@@ -317,18 +319,24 @@ const ReactMixitup = React.memo(
           };
 
           const makeStyle = (key: string) => {
-            return typeof style !== 'undefined' ? style(key) : undefined;
+            return typeof style !== 'undefined' ? style(key) : {};
           };
 
-          return renderCells(
-            itemsToRender.map(key => ({
-              key,
-              ref: makeRef(key),
-              style: makeStyle(key)
-            }))
+          return (
+            <>
+              {itemsToRender.map(key => (
+                <React.Fragment key={key}>
+                  {renderCell({
+                    key,
+                    ref: makeRef(key),
+                    style: makeStyle(key)
+                  })}
+                </React.Fragment>
+              ))}
+            </>
           );
         },
-        [renderCells]
+        [renderCell]
       );
 
       const latestIndex = states.length - 1;
@@ -346,7 +354,7 @@ const ReactMixitup = React.memo(
         </AbsoluteWrapper>
       ) : null;
 
-      if (!transition) {
+      if (!transitionEnabled) {
         return (
           <OuterBound ref={outerBoundRef}>
             <Wrapper>
@@ -520,5 +528,3 @@ const ReactMixitup = React.memo(
     }
   )
 );
-
-export default ReactMixitup;

@@ -13,39 +13,94 @@ npm install --save react-mixitup
 ## Usage
 
 ```tsx
-import * as React from 'react'
-import ReactMixitup from 'react-mixitup'
-import { shuffle, range } from 'lodash'
+import * as React from 'react';
+import ReactMixitup from 'react-mixitup';
+import { shuffle, range } from 'lodash';
 
-class Example extends React.Component {
-  state = { items: [1, 2, 3, 4] }
+const Example = () => {
+  const [keys, setKeys] = useState([1, 2, 3, 4]);
 
-  shuffle = () =>
-    this.setState({
-      items: shuffle(range(Math.round(Math.random() * 15)))
-    })
+  const updateKeys = useCallback(() => {
+    setKeys(updateKeys(range(Math.round(Math.random() * 15))));
+  }, []);
 
-  render() {
-    return (
-      <Fragment>
-        <button onClick={this.shuffle}>Shuffle</button>
-        <ReactMixitup
-          items={this.state.items}
-          renderCells={items => (
-            <div style={{ background: 'yellow' }}>
-              {items.map(({ key, ref, style }) => (
-                <div key={key} ref={ref} style={{ ...style, background: 'red' }}>
-                  {key}
-                </div>
-              ))}
-            </div>
-          )}
-        />
-      </Fragment>
-    )
-  }
-}
+  const renderCell = useCallback(({ key, ref, style }) => (
+    <div key={key} ref={ref} style={{ ...style, background: 'red' }}>
+      {key}
+    </div>
+  ), []);
+
+  return (
+    <Fragment>
+      <button onClick={updateKeys}>Shuffle</button>
+      <ReactMixitup renderCell={renderCell} keys={keys} />
+    </Fragment>
+  );
+};
 ```
+
+#### ReactMixitup props
+
+```
+ReactMixitup = (props: {
+  keys: string[]
+  duration?: number = 500
+  enableTransition?: boolean = true
+  renderItem: ({
+    key: string
+    style: CSSProperties
+    ref?: Ref
+  }) => ReactNode;
+}) => ReactNode;
+```
+
+**keys**
+
+```
+string[]
+```
+
+An array of unique ids.
+
+**duration**
+
+```
+number
+```
+
+How long should the animation last
+
+**enableTransition**
+
+```
+boolean
+```
+
+If false no transition and transform will happend. Items will just be rearanged
+
+**renderCells**
+
+```
+(items: {
+  key: string
+  style: CSSProperties
+  ref?: Ref
+}) => ReactNode
+```
+
+This function will be used to render each cell.
+The library will internaly add the key attribute to each cell so you don't have to do that.
+The style is used to position the cell using css transforms.
+The ref is used to measure the size and current position of the cell.
+
+**Wrapper**
+
+```
+(props: { style: CssProperties, children: ReactNode }) => ReactNode
+```
+
+The wrapping component.
+The props.style.height of this component will dynamically change when the items change. The children will be a react component containing the cells.
 
 ## License
 
