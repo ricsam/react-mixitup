@@ -45,11 +45,11 @@ const Example = () => {
 
 An array of unique ids.
 
-**duration** `number` optional, default: 500
+**duration** `number` *optional*, default: 500
 
 How long should the animation last
 
-**enableTransition** `boolean` optional
+**enableTransition** `boolean` *optional*
 
 If false no transition and transform will happend. Items will just be rearanged
 
@@ -60,7 +60,7 @@ The library will internaly add the key attribute to each cell so you don't have 
 The style is used to position the cell using css transforms.
 The ref is used to measure the size and current position of the cell.
 
-**Wrapper** `(props: { style: CssProperties, children: ReactNode }) => ReactNode` optional
+**Wrapper** `(props: { style: CssProperties, children: ReactNode }) => ReactNode` *optional*
 
 The wrapping component.
 The props.style.height of this component will dynamically change when the items change. The children will be a react component containing the cells.
