@@ -7,7 +7,7 @@
   "dependencies": {
     "@rdey/design": "^0.0.53",
     "invariant": "^2.2.4",
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.21",
     "react-dom": "^16.8.6",
     "react-mixitup": "link:..",
     "react-scripts": "^1.1.4",
