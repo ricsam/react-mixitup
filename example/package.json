@@ -1,0 +1,23 @@
+{
+  "name": "react-mixitup-example",
+  "homepage": "https://ricsam.github.io/ricsam/grid",
+  "version": "0.0.0",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "@rdey/design": "^0.0.53",
+    "invariant": "^2.2.4",
+    "lodash": "^4.17.11",
+    "react-dom": "^16.8.6",
+    "react-mixitup": "link:..",
+    "react-scripts": "^1.1.4",
+    "rxjs": "^6.4.0",
+    "styled-components": "^4.2.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  }
+}

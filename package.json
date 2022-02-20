@@ -1,0 +1,131 @@
+{
+  "name": "react-mixitup",
+  "version": "0.0.0-development",
+  "description": "Animate the addition, removal and shuffling of elements.",
+  "keywords": [
+    "react",
+    "mixitup",
+    "shuffle",
+    "grid",
+    "animate"
+  ],
+  "main": "dist/react-mixitup.umd.js",
+  "module": "dist/react-mixitup.es5.js",
+  "typings": "dist/types/react-mixitup.d.ts",
+  "files": [
+    "dist"
+  ],
+  "author": "Richard Samuelsson <ricsam@kth.se>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ricsam/react-mixitup.git"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=6.0.0"
+  },
+  "scripts": {
+    "build:docs": "typedoc --out docs/api --target es6 --theme minimal --mode file src",
+    "build": "yarn run compile && yarn run build:docs && yarn run docz:build",
+    "build:site": "yarn run build:docs && yarn run docz:build",
+    "commit": "git-cz",
+    "compile": "tsc --module commonjs && rollup -c rollup.config.ts",
+    "deploy-docs": "ts-node tools/gh-pages-publish",
+    "docz:build": "docz build --typescript",
+    "docz:dev": "docz dev --typescript",
+    "lint": "tslint  --project tsconfig.json -t codeFrame 'src/**/*.ts' 'test/**/*.ts'",
+    "prebuild": "rimraf dist",
+    "precommit": "lint-staged",
+    "report-coverage": "cat ./coverage/lcov.info | coveralls",
+    "semantic-release-prepare": "ts-node tools/semantic-release-prepare",
+    "semantic-release": "semantic-release",
+    "start": "rollup -c rollup.config.ts -w",
+    "test:coverage": "yarn run test -- --coverage",
+    "test:prod": "npm run lint && npm run test -- --no-cache",
+    "test:watch": "react-scripts-ts test --env=jsdom",
+    "test": "cross-env CI=1 react-scripts-ts test --env=jsdom"
+  },
+  "lint-staged": {
+    "{src,test}/**/*.{ts,tsx}": [
+      "prettier --write",
+      "git add"
+    ]
+  },
+  "config": {
+    "commitizen": {
+      "path": "node_modules/cz-conventional-changelog"
+    }
+  },
+  "jest": {
+    "coverageThreshold": {
+      "global": {
+        "branches": 90,
+        "functions": 95,
+        "lines": 95,
+        "statements": 95
+      }
+    },
+    "collectCoverageFrom": [
+      "src/*.{js,ts,tsx}"
+    ]
+  },
+  "prettier": {
+    "semi": true,
+    "singleQuote": true
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^7.1.2",
+    "@commitlint/config-conventional": "^7.1.2",
+    "@types/jest": "^23.3.2",
+    "@types/lodash.uniq": "^4.5.6",
+    "@types/node": "^10.11.0",
+    "@types/react": "^16.8.13",
+    "@types/react-dom": "^16.8.3",
+    "colors": "^1.3.2",
+    "commitizen": "^3.0.0",
+    "coveralls": "^3.0.2",
+    "cross-env": "^5.2.0",
+    "cz-conventional-changelog": "^2.1.0",
+    "docz": "^1.0.0-rc.9",
+    "docz-theme-default": "^1.0.0-rc.9",
+    "husky": "^1.0.1",
+    "lint-staged": "^8.0.0",
+    "lodash.camelcase": "^4.3.0",
+    "prettier": "^1.14.3",
+    "prompt": "^1.0.0",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
+    "react-scripts-ts": "^3.1.0",
+    "replace-in-file": "^3.4.2",
+    "rimraf": "^2.6.2",
+    "rollup": "^0.67.0",
+    "rollup-plugin-commonjs": "^9.1.8",
+    "rollup-plugin-json": "^3.1.0",
+    "rollup-plugin-node-resolve": "^3.4.0",
+    "rollup-plugin-peer-deps-external": "^2.2.0",
+    "rollup-plugin-sourcemaps": "^0.4.2",
+    "rollup-plugin-typescript2": "^0.18.0",
+    "semantic-release": "^15.13.3",
+    "shelljs": "^0.8.3",
+    "ts-node": "^7.0.1",
+    "tslint": "^5.11.0",
+    "tslint-config-prettier": "^1.15.0",
+    "tslint-config-standard": "^8.0.1",
+    "tslint-react": "^4.0.0",
+    "typedoc": "^0.12.0",
+    "typescript": "^3.0.3"
+  },
+  "peerDependencies": {
+    "react": "^16.8.6"
+  },
+  "dependencies": {
+    "@types/lodash.flatten": "^4.4.6",
+    "lodash.flatten": "^4.4.0",
+    "lodash.uniq": "^4.5.0"
+  }
+}
