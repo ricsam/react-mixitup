@@ -1,0 +1,215 @@
+---
+sidebar_position: 3
+---
+
+# API
+
+### Props
+
+#### keys
+
+List of unique numbers or strings identifying and representing each cell.
+
+```tsx
+keys: (string | number)[];
+```
+
+#### renderCell
+
+Is called to render each cell.
+
+```tsx
+type RenderCell = (
+  key: string | number,
+  style: ICellStyle,
+  ref: React.Ref<any>,
+  frame: IFrame,
+  activeFrame: boolean
+) => React.ReactNode | JSX.Element;
+```
+
+Arguments:
+
+- `key` - the corresponding key from the keys prop
+- `style` - [ICellStyle](#icellstyle) should be passed to each cell to apply css transforms.
+- `ref` - must be passed to the outer element.
+  It is used to read the position of each cell (offsetLeft, offsetTop).
+- `frame` - [IFrame](#iframe)
+- `activeFrame` - if it is the frame which is next to be rendered, see [Terminology](./terminology)
+
+#### renderWrapper
+
+Is called to render the wrapper [optional]. Apply styling for how the cells should be positioned, e.g. flex or css grid
+
+```tsx
+type RenderWrapper = (
+  style: IWrapperStyle,
+  ref: React.Ref<any>,
+  cells: JSX.Element[],
+  frame: IFrame,
+  activeFrame: boolean
+) => React.ReactNode | JSX.Element;
+```
+
+Arguments:
+
+- `style` - [IWrapperStyle](#iwrapperstyle) should be passed to the element to update the height
+- `ref` - must be passed to the outer element.
+  It is used to read the height and width of the wrapper (offsetWidth, offsetHeight).
+- `cells` - list of JSX elements to be rendered
+- `frame` - [IFrame](#iframe)
+- `activeFrame` - if it is the frame which is next to be rendered, see [Terminology](./terminology)
+
+
+#### dynamicDirection
+
+If the wrapper should grow/shrink vertically or horizontally when adding and removing cells.
+
+If you don't add or remove cells you can set the dynamicDirection to `'off'`. This will have some minor performance benefits
+as the `COMMIT` stage is skipped.
+During the `COMMIT` stage the wrapper is measured and
+transition-in styles are applied.
+
+```tsx
+dynamicDirection: 'horizontal' | 'vertical' | 'off';
+```
+
+
+import {Horizontal, Vertical, Off} from '../_examples/dynamicDirection';
+
+Example:
+
+<Horizontal />
+<br />
+<Vertical />
+<br />
+<Off />
+<br />
+
+#### transitionDuration
+Should match the longest css transition-duration used. If 0 transitions are disabled.
+
+```tsx
+transitionDuration: number;
+```
+
+### Advanced props
+
+#### disableTransition [optional]
+
+Disables all transition. Same as transitionDuration = 0
+
+```tsx
+disableTransition?: boolean;
+```
+
+#### debugMeasure [optional]
+
+Debug the measure stage.
+
+Sets for how long in milliseconds the measure wrapper should be rendered.
+
+By default the measure wrapper is hidden. When this prop is truthy it will be visible.
+
+The measure wrapper should be the same width and height as the stale wrapper.
+```tsx
+debugMeasure?: number;
+```
+
+import {DebugMeasure} from '../_examples/debugMeasure';
+
+Example:
+
+<DebugMeasure />
+<br />
+
+
+#### reMeasureAllPreviousFramesOnNewKeys [optional]
+
+If falsy only unmeasured frames and the previous 2 frames will be rendered.
+When true all previous frames are rendered and measured each time the keys props is updated.
+
+This has impact if the parent container resizes while multiple animations are dispatched.
+
+If the parent container resizes each cell must be re-measured. This has a performance impact.
+
+Thus by default only the previous 2 frames are measured.
+
+```tsx
+reMeasureAllPreviousFramesOnNewKeys?: boolean;
+```
+
+
+## Interfaces
+### IFrame
+```tsx
+/**
+ * IFrame
+ *
+ * Holds information about the keys of rendered cells
+ */
+export interface IFrame {
+  /**
+   * The height of the container when all cells are rendered.
+   */
+  containerHeight: number | undefined;
+  /**
+   * The width of the container when all cells are rendered.
+   */
+  containerWidth: number | undefined;
+  /**
+   * The keys which should be rendered
+   */
+  keys: (string | number)[];
+  /**
+   * The positions of each cell
+   */
+  positions: IPositions;
+  /**
+   * A unique index used for debugging purposes to differentiate each IFrame
+   */
+  index: number;
+  /**
+   * If the frame has been measured
+   */
+  hasBeenMeasured: boolean;
+  /**
+   * a hash generated from the keys
+   */
+  hash: string;
+}
+```
+
+### ICellStyle
+```tsx
+/**
+ * ICellStyle
+ *
+ * The styles passed to a renderCell
+ */
+interface ICellStyle {
+  position?: 'absolute';
+  top?: string;
+  left?: string;
+  margin?: '0px';
+  transition?: string;
+  transform?: string;
+}
+```
+### IWrapperStyle
+```tsx
+/**
+ * IWrapperStyle
+ *
+ * The styles passed to the renderWrapper
+ */
+interface IWrapperStyle {
+  // position absolute in MEASURE stage and position relative in ANIMATE and COMMIT stage
+  // undefined in STALE stage
+  position?: 'absolute' | 'relative';
+  width?: number;
+  height?: number;
+  visibility?: 'hidden';
+  zIndex?: -1;
+}
+```

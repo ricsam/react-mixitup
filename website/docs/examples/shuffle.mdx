@@ -1,0 +1,165 @@
+# Shuffle
+
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import { DebugTabText } from '../../_components/DebugTabText';
+
+Notice how the wrapper has a static size, thus we set `dynamicDirection=off`.
+
+<Tabs>
+<TabItem value="shuffle" label="Shuffle">
+
+```tsx live
+function Shuffle() {
+  const NUM_CELLS = 9;
+  const [keys, setKeys] = React.useState(() => range(NUM_CELLS));
+
+  const _shuffle = () => {
+    setKeys(shuffle(range(NUM_CELLS)));
+  };
+
+  const TRANSITION_DURATION = 250;
+
+  return (
+    <div>
+      <button onClick={_shuffle}>Shuffle</button>
+      <ReactMixitup
+        keys={keys}
+        // dynamicDirection is off because keys.length never changes
+        dynamicDirection="off"
+        transitionDuration={TRANSITION_DURATION}
+        renderCell={(key, style, ref) => (
+          <div
+            key={key}
+            ref={ref}
+            style={{
+              width: 48,
+              height: 48,
+              border: '1px solid black',
+              margin: 4,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              // transition-duration must be
+              // same as transitionDuration prop
+              transition: `transform ${TRANSITION_DURATION}ms ease`,
+              ...style
+            }}
+          >
+            {key}
+          </div>
+        )}
+        renderWrapper={(style, ref, children) => {
+          const squareWidth = (48 + 4 * 2);
+          const wrapperWidth = squareWidth *
+            Math.ceil(Math.sqrt(NUM_CELLS));
+          return (
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                // if wrapper height or width never changes
+                // we can have set boxSizing to anything
+                boxSizing: 'content-box',
+                width: wrapperWidth,
+                height: wrapperWidth,
+                padding: '12px 0',
+                ...style
+              }}
+              ref={ref}
+            >
+              {children}
+            </div>
+          );
+        }}
+      />
+    </div>
+  );
+}
+```
+
+</TabItem>
+<TabItem value="debug" label="Debug">
+
+<DebugTabText />
+
+```tsx live
+function Shuffle() {
+  const NUM_CELLS = 9;
+  const [keys, setKeys] = React.useState(() => range(NUM_CELLS));
+
+  const _shuffle = () => {
+    setKeys(shuffle(range(NUM_CELLS)));
+  };
+
+  const TRANSITION_DURATION = 250;
+
+  return (
+    <div style={{position: 'relative', height: 480}} >
+      <button onClick={_shuffle} style={{margin: 4}}>Shuffle</button>
+      <ReactMixitup
+        keys={keys}
+        // dynamicDirection is off because keys.length never changes
+        dynamicDirection="off"
+        transitionDuration={TRANSITION_DURATION}
+        debugMeasure={1000}
+        renderCell={(key, style, ref) => (
+          <div
+            key={key}
+            ref={ref}
+            style={{
+              width: 48,
+              height: 48,
+              border: '1px solid black',
+              margin: 4,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: `transform ${TRANSITION_DURATION}ms ease`,
+              ...style
+            }}
+          >
+            {key}
+          </div>
+        )}
+        renderWrapper={(style, ref, children, stage, frame, activeFrame) => {
+          const squareWidth = (48 + 4 * 2);
+          const wrapperWidth = squareWidth *
+            Math.ceil(Math.sqrt(NUM_CELLS));
+          return (
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+
+                // if wrapper height or width never changes
+                // we can have set boxSizing to anything
+                boxSizing: 'content-box',
+                width: wrapperWidth,
+                height: wrapperWidth,
+                padding: '12px 0',
+
+                // add some styling when debugging
+                left: stage === StageType.MEASURE ?
+                  wrapperWidth + 8 + (wrapperWidth + 8) * (frame.index % 2) : 0,
+                border: (activeFrame && stage === StageType.MEASURE) ?
+                  '1px solid rgba(0, 0, 255, 0.12)' :
+                  '1px solid transparent',
+
+                ...style
+              }}
+              ref={ref}
+            >
+              {children}
+            </div>
+          );
+        }}
+      />
+    </div>
+  );
+}
+```
+
+</TabItem>
+</Tabs>

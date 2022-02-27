@@ -14,4 +14,5 @@ Keep in mind that after running `yarn install` the git repo is reset. So a good 
 
 Make and commit your changes. Make sure the commands yarn run build and yarn run test:prod are working.
 
-Finally send a [GitHub Pull Request](https://github.com/ricsam/typescript-library-starter/compare?expand=1) with a clear list of what you've done (read more [about pull requests](https://help.github.com/articles/about-pull-requests/)). Make sure all of your commits are atomic (one feature per commit).
+Finally create a [GitHub Pull Request](https://github.com/ricsam/typescript-library-starter/compare?expand=1) with a description of what problem you are solving and how you have tested your solution. (read more [about pull requests](https://help.github.com/articles/about-pull-requests/)).
+

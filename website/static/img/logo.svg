@@ -1,0 +1,25 @@
+<svg width="332" height="332" viewBox="0 0 332 332" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="0.5" y="0.5" width="331" height="331" rx="15.5" fill="url(#paint0_linear_1_48)"/>
+<rect x="8.5" y="8.49998" width="99" height="99" rx="15.5" fill="white" fill-opacity="0.65" stroke="black"/>
+<rect x="116.5" y="8.49998" width="99" height="99" rx="15.5" fill="white" fill-opacity="0.65" stroke="black"/>
+<g opacity="0.5">
+<rect x="224.5" y="8.49998" width="99" height="99" rx="15.5" fill="white" fill-opacity="0.65" stroke="black"/>
+</g>
+<g opacity="0.5">
+<rect x="8.5" y="116.5" width="99" height="99" rx="15.5" fill="white" fill-opacity="0.65" stroke="black"/>
+</g>
+<rect x="116.5" y="116.5" width="99" height="99" rx="15.5" fill="white" fill-opacity="0.65" stroke="black"/>
+<rect x="224.5" y="116.5" width="99" height="99" rx="15.5" fill="white" fill-opacity="0.65" stroke="black"/>
+<rect x="8.5" y="224.5" width="99" height="99" rx="15.5" fill="white" fill-opacity="0.65" stroke="black"/>
+<rect x="116.5" y="224.5" width="99" height="99" rx="15.5" fill="white" fill-opacity="0.65" stroke="black"/>
+<rect x="224.5" y="224.5" width="99" height="99" rx="15.5" fill="white" fill-opacity="0.65" stroke="black"/>
+<rect x="0.5" y="0.5" width="331" height="331" rx="15.5" stroke="black"/>
+<rect x="24.5" y="108.5" width="99" height="99" rx="15.5" fill="white" fill-opacity="0.65" stroke="black"/>
+<rect x="208.5" y="16.5" width="99" height="99" rx="15.5" fill="white" fill-opacity="0.65" stroke="black"/>
+<defs>
+<linearGradient id="paint0_linear_1_48" x1="0" y1="0" x2="332" y2="332" gradientUnits="userSpaceOnUse">
+<stop stop-color="#A6AFFF"/>
+<stop offset="1" stop-color="#384AEF"/>
+</linearGradient>
+</defs>
+</svg>

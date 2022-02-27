@@ -5,6 +5,9 @@
   },
   "files": [
     "src/react-mixitup.tsx",
-    "test/react-mixitup.test.tsx",
+    "src/utils.ts",
+    "src/tests/Example.tsx",
+    "src/tests/lifeCycle.test.tsx",
+    "src/tests/react-mixitup.test.tsx"
   ]
 }

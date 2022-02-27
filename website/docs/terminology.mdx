@@ -1,0 +1,33 @@
+---
+sidebar_position: 2
+---
+
+# Terminology
+
+The naming used in react-mixitup is based on the use case of rendering a table.
+
+- **cell** - a table cell
+- **wrapper** - a parent container to the cells, i.e. the container holding the rows and columns
+- **frame** - each set of keys that are passed instanciates a frame which holds DOM data about each rendered cell
+- **active frame** - the frame with the set of keys which were last provided to ReactMixitup
+- **stage** - the stage determines what should be returned by ReactMixitup. The StageType is: `STALE | MEASURE | COMMIT | ANIMATE`,
+
+
+## Stages
+
+### STALE
+This is the default stage where each cell is rendered statically
+
+### MEASURE
+This is the stage when the wrapper is rendered with position absolute and visibility hidden.
+The size of the wrapper and the position of each cell is measured using the ref that is passed to `renderWrapper`.
+
+### COMMIT
+In this stage initial styles are added.
+Those styles include setting a fixed height or width on the wrapper,
+setting `transform: scale(0)` on each new cell and moving cells into their current position.
+
+### ANIMATE
+In animate cells are translated into their final position and appearing cells are scaled to 1 and disappearing cells
+are scaled to 0. The wrapper height is changed to the height of the active frame.
+

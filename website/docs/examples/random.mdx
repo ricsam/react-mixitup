@@ -1,0 +1,152 @@
+# Random
+
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import { DebugTabText } from '../../_components/DebugTabText';
+
+Notice how we have a dynamic height using the `dynamicDirection` prop.
+
+
+<Tabs>
+<TabItem value="random" label="Random">
+
+```tsx live
+function Random() {
+  const [keys, setKeys] = React.useState(() => range(5));
+
+  const _random = () => {
+    setKeys(shuffle(range(random(1, 10))));
+  };
+
+  const TRANSITION_DURATION = 250;
+
+  return (
+    <div style={{position: 'relative'}} >
+      <button onClick={_random} style={{margin: 4}}>Random</button>
+      <ReactMixitup
+        keys={keys}
+        dynamicDirection="vertical"
+        transitionDuration={TRANSITION_DURATION}
+        renderCell={(key, style, ref) => (
+          <div
+            key={key}
+            ref={ref}
+            style={{
+              width: 48,
+              height: 48,
+              border: '1px solid black',
+              margin: 4,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: `transform ${TRANSITION_DURATION}ms ease`,
+              ...style
+            }}
+          >
+            {key}
+          </div>
+        )}
+        renderWrapper={(style, ref, children, stage, frame) => {
+          const w = (48 + 4 * 2) * 3;
+          return (
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                // as keys.length changes boxSizing must be border-box
+                boxSizing: 'border-box',
+                width: w,
+                transition: `height ${TRANSITION_DURATION}ms ease`,
+                ...style
+              }}
+              ref={ref}
+            >
+              {children}
+            </div>
+          );
+        }}
+      />
+    </div>
+  );
+}
+```
+
+</TabItem>
+<TabItem value="debug" label="Debug">
+
+<DebugTabText />
+
+```tsx live
+function Random() {
+  const [keys, setKeys] = React.useState(() => range(5));
+
+  const _random = () => {
+    setKeys(shuffle(range(random(1, 10))));
+  };
+
+  const TRANSITION_DURATION = 250;
+
+  return (
+    <div style={{position: 'relative', height: 480}} >
+      <button onClick={_random} style={{margin: 4}}>Random</button>
+      <ReactMixitup
+        keys={keys}
+        dynamicDirection="vertical"
+        transitionDuration={TRANSITION_DURATION}
+        debugMeasure={1000}
+        renderCell={(key, style, ref) => (
+          <div
+            key={key}
+            ref={ref}
+            style={{
+              width: 48,
+              height: 48,
+              border: '1px solid black',
+              margin: 4,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: `transform ${TRANSITION_DURATION}ms ease`,
+              ...style
+            }}
+          >
+            {key}
+          </div>
+        )}
+        renderWrapper={(style, ref, children, stage, frame, activeFrame) => {
+          const w = (48 + 4 * 2) * 3;
+          return (
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+
+                // as keys.length changes boxSizing must be border-box
+                boxSizing: 'border-box',
+                width: w,
+                transition: `height ${TRANSITION_DURATION}ms ease`,
+
+                // add some styling when debugging
+                left: stage === StageType.MEASURE ?
+                  w + 8 + (w + 8) * (frame.index % 2) : 0,
+                border: (activeFrame && stage === StageType.MEASURE) ?
+                  '1px solid rgba(0, 0, 255, 0.12)' :
+                  '1px solid transparent',
+
+                ...style
+              }}
+              ref={ref}
+            >
+              {children}
+            </div>
+          );
+        }}
+      />
+    </div>
+  );
+}
+```
+
+</TabItem>
+</Tabs>

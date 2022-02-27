@@ -1,0 +1,80 @@
+---
+sidebar_position: 1
+---
+
+# Tutorial Intro
+
+Let's discover **react-mixitup in less than 5 minutes**.
+
+## Getting Started
+
+Install react-mixitup
+
+```sh
+npm install react-mixitup
+```
+
+### What you'll need
+
+- [react](https://reactjs.org/) version 16.8 or above
+- A browser supporting [transitions](https://caniuse.com/css-transitions) and [transforms](https://caniuse.com/transforms2d):
+  - over 98% of web users browse in a supported browser
+
+## Example
+
+
+:::note Terminology
+
+The naming used in react-mixitup is based on the use case of rendering a table.
+
+See [Terminology](./terminology).
+
+:::
+
+
+```tsx live
+function Example() {
+  const [keys, setKeys] = React.useState([1,2,3]);
+
+  return (
+    <div style={{ height: 64 }}>
+      <button onClick={() => {
+        setKeys(keys[0] === 1 ? [3,2,1] : [1,2,3]);
+      }}>
+        Mixitup
+      </button>
+      <ReactMixitup
+        keys={keys}
+        renderCell={(key, style, ref) => (
+          <div
+            key={key}
+            ref={ref}
+            style={{
+              transition: 'transform 300ms linear',
+              ...style,
+            }}
+          >
+            {key}
+          </div>
+        )}
+        renderWrapper={(style, ref, cells) => {
+          return (
+            <div
+              style={{
+                transition: 'height 300ms ease',
+                display: 'flex',
+                ...style
+              }}
+              ref={ref}
+            >
+              {cells}
+            </div>
+          );
+        }}
+        dynamicDirection="horizontal"
+        transitionDuration={300}
+      />
+    </div>
+  )
+}
+```
