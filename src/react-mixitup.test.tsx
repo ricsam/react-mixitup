@@ -1,43 +1,55 @@
 import { range, shuffle } from 'lodash';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import ReactMixitup from './react-mixitup';
+import { ReactMixitup } from './react-mixitup';
 
-/**
- * Dummy test
- */
+const strList = (l: number[]) => {
+  return l.map(v => String(v));
+};
+
 describe('Dummy test', () => {
   it('works if true is truthy', () => {
     const Example = () => {
-      const [items, setItems] = React.useState([1, 2, 3, 4]);
+      const [keys, setKeys] = React.useState(strList([1, 2, 3, 4]));
 
-      const shuffleItems = React.useCallback(() => {
-        setItems(shuffle(range(Math.round(Math.random() * 15))));
+      const shuffleKeys = React.useCallback(() => {
+        setKeys(strList(shuffle(range(Math.round(Math.random() * 15)))));
       }, []);
-
-      const renderCells = React.useCallback(
-        (
-          cells: Array<{
-            key: string;
-            ref?: React.Ref<any>;
-            style?: React.CSSProperties;
-          }>
-        ) => (
-          <div style={{ background: 'yellow' }}>
-            {cells.map(({ key, ref, style }) => (
-              <div key={key} ref={ref} style={{ ...style, background: 'red' }}>
-                {key}
-              </div>
-            ))}
-          </div>
-        ),
-        []
-      );
 
       return (
         <React.Fragment>
-          <button onClick={shuffleItems}>Shuffle</button>
-          <ReactMixitup items={items} renderCells={renderCells} />
+          <button onClick={shuffleKeys}>Shuffle</button>
+          <ReactMixitup
+            keys={keys}
+            renderCell={(key, style, ref) => {
+              return (
+                <div
+                  key={key}
+                  ref={ref}
+                  style={{
+                    width: '48px',
+                    height: '48px',
+                    transition: `transform ${Number(key) % 2 === 0 ? '1' : '0.25'}s ease`,
+                    color: 'rgba(0, 0, 0, 0.5)',
+                    fontWeight: 'bold',
+                    background: 'white',
+                    fontSize: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: '1px solid rgba(0, 0, 0, 0.12)',
+                    margin: '8px',
+                    fontFamily:
+                      "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,\n    'Open Sans', 'Helvetica Neue', sans-serif",
+                    borderRadius: '4px',
+                    ...style
+                  }}
+                >
+                  {key}
+                </div>
+              );
+            }}
+          />
         </React.Fragment>
       );
     };

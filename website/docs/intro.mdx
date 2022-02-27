@@ -1,0 +1,189 @@
+---
+sidebar_position: 1
+---
+
+# Tutorial Intro
+
+Let's discover **react-mixitup in less than 5 minutes**.
+
+## Getting Started
+
+Install react-mixitup
+
+```sh
+npm install react-mixitup
+```
+
+### What you'll need
+
+- [react](https://reactjs.org/) version 16.8 or above
+- A browser supporting [transitions](https://caniuse.com/css-transitions) and [transforms](https://caniuse.com/transforms2d):
+  - over 98% of web users browse in a supported browser
+
+## Render the component
+
+:::note
+
+The naming used in react-mixitup is based on the use case of rendering a table.
+
+**cell** - a table cell
+
+**wrapper** - a parent container to the cells, i.e. the container holding the rows and columns
+
+:::
+
+Example:
+
+
+```jsx
+const [keys, setKeys] = React.useState([1,2,3]);
+
+<button onClick={() => setKeys(keys[0] === 1 ? [3,2,1] : [1,2,3])}>Mixitup</button>
+<ReactMixitup
+  // unique list of keys to identify each cell.
+  keys={keys}
+  // is called to render each cell. ref and style must be passed
+  renderCell={(key, style, ref) => (
+    <div
+      key={key}
+      ref={ref}
+      style={{
+        ...style,
+        transition: 'transform 300ms linear'
+      }}
+    >
+      {key}
+    </div>
+  )}
+  // Optional. ref and style must be passed
+  renderWrapper={(style, ref, cells) => {
+    return (
+      <div
+        style={{
+          transition: 'height 300ms ease',
+          ...style
+        }}
+        ref={ref}
+      >
+        {cells}
+      </div>
+    );
+  }}
+  // when adding and removing cells, should the wrapper grow/shrink vertically or horizontally?
+  dynamicDirection="vertical"
+  // the transitionDuration should match the transition on renderCell / renderWrapper
+  transitionDuration={300}
+/>
+```
+
+### Props
+
+**keys** - list of unique numbers or strings identifying and representing each cell
+
+```tsx
+keys: (string | number)[];
+```
+
+**renderCell** - is called to render each cell
+
+```tsx
+type RenderCell = (
+  key: string | number,
+  style: ICellStyle,
+  ref: React.Ref<any>
+) => React.ReactNode | JSX.Element;
+```
+
+Arguments:
+
+- `key` - the corresponding key from the keys prop
+- `ref` - must be passed to the outer element.
+  It is used to read the position of each cell (offsetLeft, offsetTop).
+- `style` - should be passed to each cell to apply css transforms.
+
+Interfaces:
+
+```tsx
+interface ICellStyle {
+  position?: 'absolute';
+  top?: 0;
+  left?: 0;
+  margin?: 0;
+  transform?: string;
+}
+```
+
+**renderWrapper** - is called to render the wrapper [optional]. Apply styling for how the cells should be positioned, e.g. flex or css grid
+
+```tsx
+type RenderWrapper = (
+  style: IWrapperStyle,
+  ref: React.Ref<any>,
+  cells: JSX.Element[]
+) => React.ReactNode | JSX.Element;
+```
+
+Arguments:
+
+- `style` - should be passed to the element to update the height
+- `ref` - must be passed to the outer element.
+  It is used to read the height and width of the wrapper (offsetWidth, offsetHeight).
+- `cells` - list of JSX elements to be rendered
+
+Interfaces:
+
+```tsx
+interface IWrapperStyle {
+  position?: 'absolute' | 'relative';
+  width?: number;
+  height?: number;
+  top?: 0;
+  left?: 0;
+  visibility?: 'hidden';
+  zIndex?: -1;
+}
+```
+
+**dynamicDirection** - if the wrapper should grow/shrink vertically or horizontally when adding and removing cells
+
+```tsx
+dynamicDirection: 'horizontal' | 'vertical';
+```
+
+
+import {Horizontal, Vertical} from '../_examples/dynamicDirection';
+
+Example:
+
+<Horizontal />
+
+
+
+Render
+
+Generate a new Docusaurus site using the **classic template**.
+
+The classic template will automatically be added to your project after you run the command:
+
+```bash
+npm init docusaurus@latest my-website classic
+```
+
+You can type this command into Command Prompt, Powershell, Terminal, or any other integrated terminal of your code editor.
+
+The command also installs all necessary dependencies you need to run Docusaurus.
+
+## Start your site
+
+Run the development server:
+
+```bash
+cd my-website
+npm run start
+```
+
+The `cd` command changes the directory you're working with. In order to work with your newly created Docusaurus site, you'll need to navigate the terminal there.
+
+The `npm run start` command builds your website locally and serves it through a development server, ready for you to view at http://localhost:3000/.
+
+Open `docs/intro.md` (this page) and edit some lines: the site **reloads automatically** and displays your changes.

@@ -1,7 +1,6 @@
-import React, { forwardRef } from 'react';
-import PropTypes from 'prop-types';
-import { shuffle, range, uniq } from 'lodash';
-import ReactMixitup from '../src/react-mixitup';
+import React from 'react';
+import { ReactMixitup } from '../src/react-mixitup';
+import { strList } from './utils';
 
 const Wrapper = React.forwardRef(
   (
@@ -14,6 +13,8 @@ const Wrapper = React.forwardRef(
           transition: 'height 0.5s ease',
           borderBottom: '1px solid black',
           maxWidth: `${80 * 6}px`,
+          display: 'flex',
+          flexWrap: 'wrap',
           ...style
         }}
         ref={ref}
@@ -26,27 +27,23 @@ const Wrapper = React.forwardRef(
 
 const Swap = () => {
   const [a, setA] = React.useState(true);
-  const [items, setItems] = React.useState([1, 2, 3]);
+  const [keys, setItems] = React.useState(strList([1, 2, 3]));
 
   const shuffleItems = React.useCallback(() => {
     setA(!a);
     if (!a) {
-      setItems([1, 2, 3]);
+      setItems(strList([1, 2, 3]));
     } else {
-      setItems([3, 2, 1]);
+      setItems(strList([3, 2, 1]));
     }
   }, [a]);
 
-  const renderCells = React.useCallback(
-    (
-      cells: Array<{
-        key: string;
-        ref?: React.Ref<any>;
-        style?: React.CSSProperties;
-      }>
-    ) => (
-      <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-        {cells.map(({ key, ref, style }) => (
+  return (
+    <React.Fragment>
+      <button onClick={shuffleItems}>Swap</button>
+      <ReactMixitup
+        keys={keys}
+        renderCell={(key, style, ref) => (
           <div
             key={key}
             ref={ref}
@@ -62,16 +59,15 @@ const Swap = () => {
           >
             {key}
           </div>
-        ))}
-      </div>
-    ),
-    []
-  );
-
-  return (
-    <React.Fragment>
-      <button onClick={shuffleItems}>Swap</button>
-      <ReactMixitup items={items} renderCells={renderCells} Wrapper={Wrapper} duration={2500} />
+        )}
+        renderWrapper={(style, ref, children) => {
+          return (
+            <Wrapper style={style} ref={ref}>
+              {children}
+            </Wrapper>
+          );
+        }}
+      />
     </React.Fragment>
   );
 };

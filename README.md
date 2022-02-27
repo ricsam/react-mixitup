@@ -13,27 +13,28 @@ npm install --save react-mixitup
 ## Usage
 
 ```tsx
-import * as React from 'react';
+import React from 'react';
 import ReactMixitup from 'react-mixitup';
 import { shuffle, range } from 'lodash';
 
 const Example = () => {
-  const [keys, setKeys] = useState([1, 2, 3, 4]);
+  const [keys, setKeys] = useState(['1', '2', '3', '4']);
 
-  const updateKeys = useCallback(() => {
-    setKeys(updateKeys(range(Math.round(Math.random() * 15))));
-  }, []);
-
-  const renderCell = useCallback(({ key, ref, style }) => (
-    <div key={key} ref={ref} style={{ ...style, background: 'red' }}>
-      {key}
-    </div>
-  ), []);
+  const updateKeys = () => {
+    setKeys(range(Math.round(Math.random() * 15)).map(String));
+  };
 
   return (
     <Fragment>
       <button onClick={updateKeys}>Shuffle</button>
-      <ReactMixitup renderCell={renderCell} keys={keys} />
+      <ReactMixitup
+        keys={keys}
+        renderCell={(key, style, ref) => (
+          <div ref={ref} style={{ ...style, background: 'red', transition: 'transform 0.5s ease' }}>
+            {key}
+          </div>
+        )}
+      />
     </Fragment>
   );
 };
@@ -45,24 +46,19 @@ const Example = () => {
 
 An array of unique ids.
 
-**duration** `number` *optional*, default: 500
+**disableTransition** `boolean` _optional_
 
-How long should the animation last
+If true no transition and transform will happend. Items will just be rearanged
 
-**enableTransition** `boolean` *optional*
-
-If false no transition and transform will happend. Items will just be rearanged
-
-**renderCells** `(items: { key: string, style: CSSProperties, ref?: Ref }) => ReactNode`
+**renderCell** `(key: string, style: CSSProperties, ref: Ref) => ReactNode`
 
 This function will be used to render each cell.
-The library will internaly add the key attribute to each cell so you don't have to do that.
 The style is used to position the cell using css transforms.
 The ref is used to measure the size and current position of the cell.
 
-**Wrapper** `(props: { style: CssProperties, children: ReactNode }) => ReactNode` *optional*
+**renderWrapper** `(style: CssProperties, ref: Ref, children: ReactNode) => ReactNode` _optional_
 
-The wrapping component.
+Returns the wrapping component.
 The props.style.height of this component will dynamically change when the items change. The children will be a react component containing the cells.
 
 ## License

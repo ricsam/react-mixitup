@@ -1,530 +1,756 @@
-/**
- * @class ReactMixitup
- */
-
-import flatten from 'lodash.flatten';
-import uniq from 'lodash.uniq';
 import * as React from 'react';
 
+/**
+ * IPosition
+ *
+ * The position of a cell. x and y are its offsetX and offsetY position.
+ * If a cell is to be removed or added the scale property will be added, 0 to 1
+ */
 interface IPosition {
   x: number;
   y: number;
-  z?: number;
+  scale?: number;
 }
+/**
+ * IPositions
+ *
+ * The collection of positions for each key
+ */
 interface IPositions {
   [key: string]: IPosition;
 }
-interface IReducerState {
-  hash: null | string;
-  mount: boolean;
-  commit: boolean;
-  animate: boolean;
-  firstRender: boolean;
+
+/**
+ * State
+ *
+ * Determines what to render in the component
+ */
+enum StateType {
+  /**
+   * STALE
+   *
+   * If the animation finishes the next state will be STALE.
+   * Render the cells in the wrapper statically positioned.
+   */
+  STALE = 'STALE',
+  /**
+   * MEASURE
+   *
+   * If oldKeys.join() != nextKeys.join() then the next state will be MEASURE.
+   *
+   * Render next cells in a hidden div and measure the position of each next cell.
+   * Measure the height of the next hidden wrapper.
+   *
+   * Measure the position of each old cell.
+   * Measure the height of the old wrapper.
+   */
+  MEASURE = 'MEASURE',
+  /**
+   * COMMIT
+   *
+   * If state is MEASURE then the next state will be COMMIT.
+   *
+   * Render all unique cells from the old list of keys and the next list of keys.
+   *
+   * All cells are position absolute. The old cells should be css translated to their old position and scaled to 1.
+   *
+   * All new cells, i.e those keys in next keys which are not in old keys should be translated to their
+   * next position, and scaled to 0.
+   */
+  COMMIT = 'COMMIT',
+  /**
+   * ANIMATE
+   *
+   * If state is COMMIT or ANIMATE_COMMIT then the next state will be ANIMATE.
+   *
+   * For each cell that should be moved, i.e the intersection between old keys and new keys, update style.translate to the new position.
+   *
+   * For each cell that should be removed, i.e those in old keys not present in new keys, update style.scale to 0
+   *
+   * For each cell that should be added, i.e. those in new keys not present in old keys, update style.cale to 1
+   */
+  ANIMATE = 'ANIMATE',
+  /**
+   * ANIMATE_MEASURE
+   *
+   * If state is ANIMATE, and the keys are updated then the next state will be ANIMATE_MEASURE.
+   *
+   * Render next cells in a hidden div and measure the position of each next cell.
+   * Measure the height of the next hidden wrapper.
+   *
+   * The positions of the old cells should already be measured
+   *
+   * Render the same as in ANIMATE while rendering the measuring component.
+   *
+   */
+  ANIMATE_MEASURE = 'ANIMATE_MEASURE',
+  /**
+   * ANIMATE_COMMIT
+   *
+   * If state is ANIMATE_MEASURE then the next state will be ANIMATE_COMMIT.
+   *
+   * Render all unique cells from the old lists of keys (notice plural on lists) and the next list of keys.
+   * That is the the same as in ANIMATE.
+   *
+   * All cells which are now to be removed should be scaled to 0.
+   *
+   * All new cells, i.e those keys in next keys which are not in old keys should be translated to their
+   * next position, and scaled to 0.
+   */
+  ANIMATE_COMMIT = 'ANIMATE_COMMIT'
 }
 
-interface IState {
-  containerHeight: number | null;
-  items: Keys;
+/**
+ * IFrame
+ *
+ * Holds information about the keys of rendered cells
+ */
+interface IFrame {
+  /**
+   * The height of the container when all cells are rendered.
+   */
+  containerHeight: number | undefined;
+  /**
+   * The width of the container when all cells are rendered.
+   */
+  containerWidth: number | undefined;
+  /**
+   * The keys which should be rendered
+   */
+  keys: (string | number)[];
+  /**
+   * The positions of each cell
+   */
   positions: IPositions;
+  /**
+   * A unique id used for debugging purposes to differentiate each IFrame
+   */
+  id: string;
+
+  /**
+   * If the frame has been measured
+   */
+  hasBeenMeasured: boolean;
 }
 
-type Key = string;
-type Keys = Key[];
-
-interface IWrapperProps {
-  children: React.ReactNode;
-  style?: React.CSSProperties;
-  ref?: React.Ref<any>;
+/**
+ * ICellStyle
+ *
+ * The styles passed to a cell
+ */
+interface ICellStyle {
+  position?: 'absolute';
+  top?: 0;
+  left?: 0;
+  margin?: 0;
+  transform?: string;
 }
 
-type WrapperType = any;
+interface IWrapperStyle {
+  position?: 'absolute' | 'relative';
+  width?: number;
+  height?: number;
+  top?: 0;
+  left?: 0;
+  visibility?: 'hidden';
+  zIndex?: -1;
+}
 
+/**
+ * IProps
+ *
+ * The props accepted by ReactMixitup
+ */
 interface IProps {
-  keys: Keys;
-  duration?: number;
-  renderCell: (item: {
-    key: string;
-    style: React.CSSProperties;
-    ref?: React.Ref<any>;
-  }) => React.ReactNode;
-  Wrapper?: WrapperType;
-  enableTransition?: boolean;
+  /**
+   * keys should be a unique list of strings.
+   */
+  keys: (string | number)[];
+  /**
+   * MUST return a react node.
+   *
+   * The item.key corresponds to a key in the keys prop.
+   * You should use the key to render the correct data in the cell.
+   *
+   * It MUST accept style and forward that to the returned component.
+   * Style contains the transition styles.
+   *
+   * The ref MUST also be attached to the returned element so
+   * ReactMixitup is able to measure the position of the cell.
+   */
+  renderCell: (
+    key: string | number,
+    style: ICellStyle,
+    ref: React.Ref<any>
+  ) => React.ReactNode | JSX.Element;
+
+  /**
+   * Optional, by default ReactMixitup will wrap all cells in a div.
+   *
+   * If provided renderWrapper MUST return a React node which accepts the provided style and ref.
+   *
+   * The ref is used to measure the height of the wrapping container.
+   *
+   * The style is used to update the height of the wrapping container.
+   * By setting the transition: height style property on the wrapper the height can be animated.
+   */
+  renderWrapper?: (
+    style: IWrapperStyle,
+    ref: React.Ref<any>,
+    cells: JSX.Element[]
+  ) => React.ReactNode | JSX.Element;
+
+  /**
+   * Disable the transition
+   */
+  disableTransition?: boolean;
+
+  /**
+   * If the wrapper should grow/shrink vertically or horizontally when adding and removing cells
+   */
+  dynamicDirection: 'horizontal' | 'vertical';
+
+  transitionDuration: number;
 }
 
-interface IAction {
-  type: 'SET_HASH' | 'STOP_ANIMATION' | 'ANIMATE' | 'COMMIT';
-  hash?: string | null;
-  key?: string;
-  el?: HTMLElement | null;
-  transition?: boolean;
+/**
+ * Creates a hash of the keys in order to determine if the keys are updated
+ */
+function getKeysHash(keys: (string | number)[]): string {
+  return keys.map(k => `${(typeof k)[0]}${k}`).join(',');
 }
 
-const OuterBound = React.memo(
-  React.forwardRef((props: { children: React.ReactNode }, ref?: React.Ref<any>) => (
-    <div style={{ position: 'relative' }} {...props} ref={ref} />
-  ))
-);
-
-function init(): IReducerState {
-  return {
-    animate: false,
-    commit: false,
-    firstRender: true,
-    hash: null,
-    mount: false
+/**
+ * Flattens a nested array
+ */
+const flatten = <T extends unknown>(nested: (T | T[])[]): T[] => {
+  const flatList: T[] = [];
+  const iter = (item: T | T[]) => {
+    if (Array.isArray(item)) {
+      item.forEach(iter);
+    } else {
+      flatList.push(item);
+    }
   };
-}
-
-const getItemsHash = (items: Keys): string => {
-  return items.join(',');
+  nested.forEach(iter);
+  return flatList;
 };
 
-function reducer(state: IReducerState, action: IAction): IReducerState {
-  switch (action.type) {
-    case 'SET_HASH':
-      if (typeof action.hash === 'undefined') {
-        throw new Error();
-      }
-      let mount = true;
-      if (
-        state.firstRender ||
-        state.mount ||
-        state.commit /* || state.animate */ ||
-        !action.transition
-      ) {
-        mount = false;
-      }
-      return {
-        ...state,
-        hash: action.hash,
-        firstRender: false,
-        mount
-      };
-    case 'COMMIT':
-      return {
-        ...state,
-        commit: true,
-        mount: false
-      };
-    case 'ANIMATE':
-      return {
-        ...state,
-        animate: true,
-        commit: false
-      };
-    case 'STOP_ANIMATION':
-      return {
-        ...state,
-        animate: false,
-        mount: false
-      };
-    default:
-      throw new Error();
-  }
-}
+/**
+ * MUST return a React node which accepts the provided style and ref.
+ *
+ * The ref is used to measure the height of the wrapping container.
+ *
+ * The style is used to update the height of the wrapping container.
+ * By setting the transition: height style property on the wrapper the height can be animated.
+ */
+export type RenderWrapper = Exclude<IProps['renderWrapper'], undefined>;
 
-function onNextFrame(callback: () => any) {
-  setTimeout(() => {
-    window.requestAnimationFrame(callback);
-  }, 0);
-}
+/**
+ * MUST return a react node.
+ *
+ * The item.key corresponds to a key in the keys prop.
+ * You should use the key to render the correct data in the cell.
+ *
+ * It MUST accept style and forward that to the returned component.
+ * Style contains the transition styles.
+ *
+ * The ref MUST also be attached to the returned element so
+ * ReactMixitup is able to measure the position of the cell.
+ */
+export type RenderCell = Exclude<IProps['renderCell'], undefined>;
 
-const makeAbsoluteWrapper = (Wrapper: React.JSXElementConstructor<any>) =>
-  React.memo(
-    React.forwardRef((props: { children: React.ReactNode }, ref?: React.Ref<any>) => (
-      <Wrapper
-        style={{
-          position: 'absolute',
-          top: '0',
-          left: '0',
-          right: '0',
-          visibility: 'hidden',
-          zIndex: -1
-        }}
-        {...props}
-        ref={ref}
-      />
-    ))
+/**
+ * Default renderer
+ */
+const defaultRenderWrapper: RenderWrapper = (style, ref, cells) => {
+  return (
+    <div style={style} ref={ref}>
+      {cells}
+    </div>
   );
+};
 
-const makeWrapper = (ReactMixitupWrapper: WrapperType) => {
-  return React.memo(
-    React.forwardRef((props: IWrapperProps, ref) => <ReactMixitupWrapper {...props} ref={ref} />)
-  );
+const uniq = (values: (string | number)[]) => {
+  const seen = new Set(values);
+  const uniq: (string | number)[] = [];
+  seen.forEach(value => {
+    uniq.push(value);
+  });
+  return uniq;
+};
+
+type State =
+  | {
+      type: StateType.MEASURE;
+      frameToMeasure: IFrame;
+      whileAnimating: boolean;
+    }
+  | {
+      type: StateType.ANIMATE;
+    }
+  | {
+      type: StateType.COMMIT;
+      whileAnimating: boolean;
+    }
+  | {
+      type: StateType.STALE;
+      frame: IFrame;
+    };
+
+const NotifyAboutRendered = ({
+  children,
+  frame
+}: {
+  children: React.ReactNode | JSX.Element;
+  frame: IFrame;
+}) => {
+  React.useLayoutEffect(() => {
+    frame.hasBeenMeasured = true;
+  }, [frame]);
+  return <>{children}</>;
 };
 
 export const ReactMixitup = React.memo(
   React.forwardRef(
     (
       {
-        keys: unparsedItems,
-        duration = 500,
+        keys,
         renderCell,
-        Wrapper: ReactMixitupWrapper = 'div',
-        enableTransition: transitionEnabled = true
+        renderWrapper = defaultRenderWrapper,
+        disableTransition = false,
+        dynamicDirection,
+        transitionDuration
       }: IProps,
       outerBoundRef: React.Ref<HTMLDivElement>
     ): JSX.Element | null => {
-      const Wrapper = React.useMemo(() => makeWrapper(ReactMixitupWrapper), [ReactMixitupWrapper]);
-      const AbsoluteWrapper = React.useMemo(() => makeAbsoluteWrapper(Wrapper), [Wrapper]);
-
       /* ensure every item is a string */
-      const items: Keys = unparsedItems.map(key => key.toString());
-      if (new Set(items).size !== items.length) {
+      if (new Set(keys).size !== keys.length) {
         throw new Error('In prop keys: every key must be unique');
       }
 
-      const [{ hash, animate, mount, commit }, unsafeDispatch] = React.useReducer(
-        reducer,
-        items,
-        init
-      );
-
-      const unmounted = React.useRef(false);
-      React.useEffect(
-        () => () => {
-          unmounted.current = true;
-        },
-        []
-      );
-
-      const dispatch = React.useCallback((action: IAction) => {
-        if (unmounted.current) {
-          return;
-        }
-        unsafeDispatch(action);
-      }, []);
+      const createFrame = (): IFrame => {
+        return {
+          id: String(Math.random()),
+          keys,
+          containerHeight: undefined,
+          containerWidth: undefined,
+          positions: {},
+          hasBeenMeasured: false
+        };
+      };
 
       const refs = React.useRef<{
-        states: IState[];
+        frames: IFrame[];
         persistedElement: JSX.Element | null;
-      }>({
-        states: [
-          {
-            items,
-            positions: {},
-            containerHeight: null
-          }
-        ],
-        persistedElement: null
+        hash: undefined | string;
+        state: State;
+      }>(undefined as any);
+
+      if (!refs.current) {
+        const frame = createFrame();
+        refs.current = {
+          frames: [frame],
+          persistedElement: null,
+          hash: undefined,
+          state: { type: StateType.STALE, frame }
+        };
+      }
+
+      const [, _update] = React.useState(0);
+      const update = () => {
+        setTimeout(() => {
+          _update(i => i + 1);
+        }, 1);
+      };
+
+      React.useEffect(() => {
+        if (refs.current.state.type === StateType.MEASURE) {
+          refs.current.state = {
+            type: StateType.COMMIT,
+            whileAnimating: refs.current.state.whileAnimating
+          };
+          update();
+        } else if (refs.current.state.type === StateType.COMMIT) {
+          refs.current.state = {
+            type: StateType.ANIMATE
+          };
+          window.requestAnimationFrame(() => {
+            update();
+          });
+        }
       });
-      let newHash: string | null = getItemsHash(items);
-      let newGrid = newHash !== hash;
-      /* just to handle if clicking really fast, then ignore the update */
-      if (mount || commit) {
-        newGrid = false;
-        newHash = hash;
+
+      const nextHash = getKeysHash(keys);
+
+      if (refs.current.hash === undefined) {
+        // first render
+        refs.current.hash = nextHash;
       }
 
-      let currentState = refs.current.states[refs.current.states.length - 1];
-
-      if (newGrid) {
-        const nextState: IState = {
-          items,
-          positions: {},
-          containerHeight: null
-        };
-        if (animate) {
-          refs.current.states.push(nextState);
+      if (refs.current.hash !== nextHash) {
+        refs.current.hash = nextHash;
+        const frame = createFrame();
+        if (disableTransition) {
+          refs.current.frames.splice(0, refs.current.frames.length, frame);
+          refs.current.state = {
+            type: StateType.STALE,
+            frame
+          };
         } else {
-          refs.current.states = [currentState, nextState];
+          refs.current.frames.push(frame);
+          const whileAnimating =
+            'whileAnimating' in refs.current.state
+              ? refs.current.state.whileAnimating
+              : refs.current.state.type === StateType.ANIMATE;
+          refs.current.state = {
+            type: StateType.MEASURE,
+            frameToMeasure: frame,
+            whileAnimating
+          };
         }
-
-        currentState = refs.current.states[refs.current.states.length - 1];
       }
-      const { states } = refs.current;
 
-      React.useEffect(() => {
-        if (newGrid) {
-          dispatch({
-            type: 'SET_HASH',
-            hash: newHash,
-            transition: transitionEnabled
-          });
-        }
-      }, [newHash, newGrid, transitionEnabled]);
-
-      React.useEffect(() => {
-        if (mount) {
-          /* make sure the mount has been committed to the DOM, double make sure by wrapping in onNextFrame */
-          onNextFrame(() => {
-            dispatch({
-              type: 'COMMIT'
-            });
-          });
-        }
-      }, [mount]);
-
-      React.useEffect(() => {
-        if (commit) {
-          onNextFrame(() => {
-            dispatch({
-              type: 'ANIMATE'
-            });
-          });
-        }
-      }, [commit]);
-
-      React.useEffect(() => {
-        let timer: number;
-        const clear = () => {
-          window.clearTimeout(timer);
-        };
-        if (animate) {
-          timer = window.setTimeout(() => {
-            dispatch({
-              type: 'STOP_ANIMATION'
-            });
-          }, duration);
-        } else {
-          clear();
-        }
-        return clear;
-      }, [animate, newHash]);
-
-      const measureRef = React.useCallback((key: string, el: HTMLElement) => {
-        // console.log(index, states, key);
-        refs.current.states[refs.current.states.length - 1].positions[key] = {
+      const measureGridItems = (frame: IFrame, key: string | number, el: HTMLElement) => {
+        const pos = {
           x: el.offsetLeft,
           y: el.offsetTop
         };
-      }, []);
+        frame.positions[key] = pos;
+      };
 
-      const wrapperMeasureContainerHeight = React.useCallback((el: HTMLElement | null) => {
+      const wrapperMeasureContainerSize = (frame: IFrame, el: HTMLElement | null) => {
         if (!el) {
           return;
         }
-        refs.current.states[refs.current.states.length - 1].containerHeight = el.offsetHeight;
-      }, []);
+        const h = el.offsetHeight;
+        const w = el.offsetWidth;
+        frame.containerHeight = h;
+        frame.containerWidth = w;
+      };
 
-      const rows = React.useCallback(
-        ({
-          itemsToRender,
-          ref,
-          style
-        }: {
-          itemsToRender: Keys;
-          ref?: (key: string, el: HTMLElement) => void;
-          style?: (key: string) => React.CSSProperties;
-        }) => {
-          const makeRef = (key: string) => {
-            if (typeof ref === 'undefined') {
-              return;
+      const cells = ({
+        ref,
+        style,
+        keys
+      }: {
+        keys: (string | number)[];
+        ref: (key: string | number, el: HTMLElement) => void;
+        style: (key: string | number) => ICellStyle;
+      }) => {
+        const makeRef = (key: string | number) => {
+          return (el: HTMLElement | null) => {
+            if (el) {
+              ref(key, el);
             }
-            return (el: HTMLElement | null) => {
-              if (el) {
-                ref(key, el);
-              }
-            };
           };
+        };
 
-          const makeStyle = (key: string) => {
-            return typeof style !== 'undefined' ? style(key) : {};
-          };
+        const cells = keys.map(key => (
+          <React.Fragment key={key}>{renderCell(key, style(key), makeRef(key))}</React.Fragment>
+        ));
 
-          return (
-            <>
-              {itemsToRender.map(key => (
-                <React.Fragment key={key}>
-                  {renderCell({
-                    key,
-                    ref: makeRef(key),
-                    style: makeStyle(key)
-                  })}
-                </React.Fragment>
-              ))}
-            </>
-          );
-        },
-        [renderCell]
+        return cells;
+      };
+
+      const measureFrame = (frame: IFrame) => (
+        <NotifyAboutRendered frame={frame}>
+          {renderWrapper(
+            {
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              visibility: 'hidden',
+              zIndex: -1
+            },
+            el => {
+              wrapperMeasureContainerSize(frame, el);
+            },
+            cells({
+              ref: (key, el) => {
+                measureGridItems(frame, key, el);
+              },
+              keys: frame.keys,
+              style: () => ({})
+            })
+          )}
+        </NotifyAboutRendered>
       );
 
-      const latestIndex = states.length - 1;
+      const onEndOfTransition = () => {
+        const frame = refs.current.frames[refs.current.frames.length - 1];
+        refs.current.state = {
+          type: StateType.STALE,
+          frame
+        };
+        // stale should always only have 1 frame
+        refs.current.frames = [frame];
 
-      if (commit) {
-        return refs.current.persistedElement;
-      }
+        update();
+      };
 
-      const measureNewGrid = newGrid ? (
-        <AbsoluteWrapper ref={wrapperMeasureContainerHeight}>
-          {rows({
-            itemsToRender: currentState.items,
-            ref: measureRef
-          })}
-        </AbsoluteWrapper>
-      ) : null;
+      React.useEffect(() => {
+        if (refs.current.state.type === StateType.ANIMATE) {
+          const timeout = setTimeout(() => {
+            onEndOfTransition();
+          }, transitionDuration);
 
-      if (!transitionEnabled) {
+          return () => {
+            clearTimeout(timeout);
+          };
+        }
+      });
+
+      console.log('refs', JSON.stringify(refs.current.state, null, 2));
+
+      // BEGIN RENDER
+
+      // The keys used on the React.Fragments are there to assist React in preseving the DOM tree nodes and
+      // prevent unmounting of components which interupts animation
+      const ROOT_LEVEL = 'root-level';
+      const VISIBLE_LEVEL = 'visible-level';
+      const WRAPPER_LEVEL = 'wrapper-level';
+      const HIDDEN_LEVEL = 'hidden-level';
+      // The hierarchies:
+      // root-level > visible-level > wrapper-level > renderWrapper
+      //      ↳     > hidden-level > [key] > wrapper-level > NotifyAboutRendered > renderWrapper
+
+      /**
+       * staleFrame
+       *
+       * Renders the cells without any modifications
+       *
+       * @param frame IFrame
+       * @returns React.ReactNode | JSX.Element
+       */
+      const staleFrame = (frame: IFrame) => (
+        <React.Fragment key={WRAPPER_LEVEL}>
+          {renderWrapper(
+            {},
+            () => {},
+            cells({
+              ref: () => {},
+              keys: frame.keys,
+              style: () => ({})
+            })
+          )}
+        </React.Fragment>
+      );
+
+      // If transitions are disabled, always render the staleFrame node
+      if (disableTransition) {
         return (
-          <OuterBound ref={outerBoundRef}>
-            <Wrapper>
-              {rows({
-                itemsToRender: currentState.items
-              })}
-            </Wrapper>
-          </OuterBound>
+          <React.Fragment key={ROOT_LEVEL}>
+            <React.Fragment key={VISIBLE_LEVEL}>
+              {staleFrame(refs.current.frames[refs.current.frames.length - 1])}
+            </React.Fragment>
+          </React.Fragment>
         );
       }
 
-      let child = (
-        <>
-          <Wrapper>
-            {rows({
-              itemsToRender: currentState.items
-            })}
-          </Wrapper>
-          {measureNewGrid}
-        </>
-      );
-
-      if (newGrid) {
-        /* AND !animate AND !mount */
-        /* measure stage */
-        child = (
-          <>
-            <Wrapper>
-              {rows({
-                itemsToRender: states.length > 1 ? states[states.length - 2].items : states[0].items
-              })}
-            </Wrapper>
-            {measureNewGrid}
-          </>
-        );
-      }
-
-      const getItemStateIndexes = (item: string): number[] => {
+      /**
+       * getKeyFrameParticipation
+       *
+       * returns the frame indices where a key is present
+       *
+       * @param frames IFrame[]
+       * @param key string
+       * @returns number[]
+       */
+      const getKeyFrameParticipation = (frames: IFrame[], key: string | number): number[] => {
         const indexes = [];
-        for (let i = states.length - 1; i >= 0; i -= 1) {
-          const state = states[i];
-          if (state.items.includes(item)) {
+        for (let i = frames.length - 1; i >= 0; i -= 1) {
+          const frame = frames[i];
+          if (frame.keys.includes(key)) {
             indexes.push(i);
           }
         }
         return indexes;
       };
 
-      const allItems = flatten(states.map(({ items: sItems }) => sItems));
-
-      const getLatestPositions = (item: string): IPosition | undefined => {
-        for (let i = states.length - 1; i >= 0; i -= 1) {
-          const state = states[i];
-          if (state.positions[item]) {
-            return state.positions[item];
-          }
+      /**
+       * animatingFrame
+       *
+       * Returns the nodes which renders while animating.
+       * Translate all elements to ther corresponding static location in the latest frame
+       *
+       * @param frames IFrame[]
+       * @returns JSX.Element
+       */
+      const animatingFrame = (frames: IFrame[]) => {
+        const height = frames[frames.length - 1].containerHeight!;
+        const width = frames[frames.length - 1].containerWidth!;
+        const styles: IWrapperStyle = {};
+        if (dynamicDirection === 'horizontal') {
+          styles.width = width;
+        } else {
+          styles.height = height;
         }
-        return undefined;
-      };
-
-      const animationRenderItems = uniq(allItems)
-        .sort()
-        .filter(getLatestPositions);
-
-      if (mount) {
-        // debugger;
-        child = (
-          <>
-            <Wrapper style={{ height: states[states.length - 2].containerHeight + 'px' }}>
-              {rows({
-                itemsToRender: animationRenderItems,
-                style(key) {
+        return (
+          <React.Fragment key={WRAPPER_LEVEL}>
+            {renderWrapper(
+              {
+                ...styles,
+                position: 'relative'
+              },
+              () => {},
+              cells({
+                ref: (key, el) => {},
+                keys: uniq(flatten(frames.map(frame => frame.keys))),
+                style: key => {
                   let z = 1;
                   let x = 0;
                   let y = 0;
 
-                  const indexes = getItemStateIndexes(key);
+                  const indexes = getKeyFrameParticipation(frames, key);
                   if (indexes.length === 0) {
                     throw new Error('something went wrong in the lib');
                   }
-                  /* the new items (indexes[0] === latestIndex) that has a previous position */
 
-                  ({ x, y } = states[indexes[0]].positions[key]);
+                  ({ x, y } = frames[indexes[0]].positions[key]);
 
-                  if (indexes[0] === latestIndex) {
-                    if (indexes.length > 1) {
-                      /* move from previous position */
-                      ({ x, y } = states[indexes[1]].positions[key]);
-                    } else {
-                      /* appear at current position */
-                      z = 0;
-                    }
+                  /* will be added */
+                  if (indexes.length === 1) {
+                    z = 1;
+                  }
+
+                  /* will be removed */
+                  if (!frames[frames.length - 1].keys.includes(key)) {
+                    z = 0;
                   }
 
                   const transform = `translate3d(${[x, y, 0].join('px,')}px) scale(${z})`;
 
-                  const style: React.CSSProperties = {
+                  const style: ICellStyle = {
                     transform,
                     position: 'absolute',
                     top: 0,
                     left: 0,
                     margin: 0
                   };
-
                   return style;
                 }
-              })}
-            </Wrapper>
-          </>
+              })
+            )}
+          </React.Fragment>
+        );
+      };
+
+      // When animating render the animatingFrame
+      if (refs.current.state.type === StateType.ANIMATE) {
+        return (
+          <React.Fragment key={ROOT_LEVEL}>
+            <React.Fragment key={VISIBLE_LEVEL}>
+              {animatingFrame(refs.current.frames)}
+            </React.Fragment>
+          </React.Fragment>
         );
       }
 
-      if (animate) {
-        // debugger;
-        child = (
-          <>
-            <Wrapper style={{ height: currentState.containerHeight + 'px' }}>
-              {rows({
-                /* they must have been measured */
-                itemsToRender: animationRenderItems,
-                style(key) {
-                  let z = 1;
-                  let x = 0;
-                  let y = 0;
+      // Commit will translate all elements to their corresponding static location of the previous frame.
+      if (refs.current.state.type === StateType.COMMIT) {
+        const state = refs.current.state;
+        let sizeFrame = refs.current.frames[refs.current.frames.length - 2];
+        if (state.whileAnimating) {
+          sizeFrame = refs.current.frames[refs.current.frames.length - 1];
+        }
+        const height = sizeFrame.containerHeight!;
+        const width = sizeFrame.containerWidth!;
+        const styles: IWrapperStyle = {};
+        if (dynamicDirection === 'horizontal') {
+          styles.width = width;
+        } else {
+          styles.height = height;
+        }
+        return (
+          <React.Fragment key={ROOT_LEVEL}>
+            <React.Fragment key={VISIBLE_LEVEL}>
+              <React.Fragment key={WRAPPER_LEVEL}>
+                {renderWrapper(
+                  {
+                    ...styles,
+                    position: 'relative'
+                  },
+                  () => {},
+                  cells({
+                    ref: (key, el) => {},
+                    keys: uniq(flatten(refs.current.frames.map(frame => frame.keys))),
+                    style: key => {
+                      let z = 1;
+                      let x = 0;
+                      let y = 0;
 
-                  const indexes = getItemStateIndexes(key);
-                  if (indexes.length === 0) {
-                    throw new Error('something went wrong in the lib');
-                  }
+                      const indexes = getKeyFrameParticipation(refs.current.frames, key);
+                      if (indexes.length === 0) {
+                        throw new Error('something went wrong in the lib');
+                      }
 
-                  const latestPosition = getLatestPositions(key);
+                      ({ x, y } = refs.current.frames[indexes[0]].positions[key]);
 
-                  if (!latestPosition) {
-                    throw new Error('This should not happed since filtering');
-                  }
+                      if (indexes[0] === refs.current.frames.length - 1) {
+                        if (indexes.length > 1) {
+                          /* move from previous position */
+                          ({ x, y } = refs.current.frames[indexes[1]].positions[key]);
+                        } else {
+                          /* appear at current position */
+                          z = 0;
+                        }
+                      }
 
-                  ({ x, y } = latestPosition);
+                      const transform = `translate3d(${[x, y, 0].join('px,')}px) scale(${z})`;
 
-                  // /* was just added */
-                  if (indexes.length === 1 && latestIndex === indexes[0] && mount) {
-                    z = 0;
-                  }
+                      const style: ICellStyle = {
+                        transform,
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        margin: 0
+                      };
 
-                  /* will be removed */
-                  if (!currentState.items.includes(key)) {
-                    z = 0;
-                  }
-
-                  const transform = `translate3d(${[x, y, 0].join('px,')}px) scale(${z})`;
-
-                  const style: React.CSSProperties = {
-                    transform,
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    margin: 0,
-                    transition: `transform ${duration}ms ease`
-                  };
-                  return style;
-                }
-              })}
-            </Wrapper>
-            {measureNewGrid}
-          </>
+                      return style;
+                    }
+                  })
+                )}
+              </React.Fragment>
+            </React.Fragment>
+          </React.Fragment>
         );
       }
 
-      refs.current.persistedElement = <OuterBound ref={outerBoundRef}>{child}</OuterBound>;
+      // Measure
+      if (refs.current.state.type === StateType.MEASURE) {
+        console.log('@rendering stale frame', refs.current.frames[0]);
+        return (
+          <React.Fragment key={ROOT_LEVEL}>
+            <React.Fragment key={HIDDEN_LEVEL}>
+              {refs.current.frames
+                .filter(frame => !frame.hasBeenMeasured)
+                .map(frame => {
+                  return <React.Fragment key={frame.id}>{measureFrame(frame)}</React.Fragment>;
+                })}
+            </React.Fragment>
+            <React.Fragment key={VISIBLE_LEVEL}>
+              {refs.current.state.whileAnimating
+                ? animatingFrame(refs.current.frames.filter(frame => frame.hasBeenMeasured))
+                : staleFrame(refs.current.frames[0])}
+            </React.Fragment>
+          </React.Fragment>
+        );
+      }
 
-      return refs.current.persistedElement;
+      // If state is stale render the stale frame
+      if (refs.current.state.type === StateType.STALE) {
+        console.log('@rendering stale frame', refs.current.state.frame);
+        return (
+          <React.Fragment key={ROOT_LEVEL}>
+            <React.Fragment key={VISIBLE_LEVEL}>
+              {staleFrame(refs.current.state.frame)}
+            </React.Fragment>
+          </React.Fragment>
+        );
+      }
+
+      return null;
     }
   )
 );
