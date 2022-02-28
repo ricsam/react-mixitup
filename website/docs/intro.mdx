@@ -22,7 +22,7 @@ npm install react-mixitup
 
 ## Render the component
 
-:::note
+:::note Terminology
 
 The naming used in react-mixitup is based on the use case of rendering a table.
 
@@ -48,8 +48,8 @@ const [keys, setKeys] = React.useState([1,2,3]);
       key={key}
       ref={ref}
       style={{
+        transition: 'transform 300ms linear',
         ...style,
-        transition: 'transform 300ms linear'
       }}
     >
       {key}
@@ -144,10 +144,13 @@ interface IWrapperStyle {
 }
 ```
 
-**dynamicDirection** - if the wrapper should grow/shrink vertically or horizontally when adding and removing cells
+**dynamicDirection** - if the wrapper should grow/shrink vertically or horizontally when adding and removing cells.
+
+If you don't add or remove cells you can set the dynamicDirection to `'off'`. This will have some minor performance benefits
+as the wrapper doesn't need to be measured and the `COMMIT` stage is skipped.
 
 ```tsx
-dynamicDirection: 'horizontal' | 'vertical';
+dynamicDirection: 'horizontal' | 'vertical' | 'off';
 ```
 
 
@@ -156,6 +159,17 @@ import {Horizontal, Vertical} from '../_examples/dynamicDirection';
 Example:
 
 <Horizontal />
+<br />
+<Vertical />
+<br />
+
+**transitionDuration** - should match the longest transition-duration used
+
+```tsx
+transitionDuration: number;
+```
+
+**disableTransition** - [optional] disables all transition
 
 
 

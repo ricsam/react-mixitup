@@ -12,18 +12,27 @@ import { useEffect } from 'react';
 //   );
 const getItems = () => shuffle(range(9)).map(s => String(s));
 
-const duration = 3000;
+const duration = 300;
 
 export const Shuffle = () => {
-  // const [items, setItems] = React.useState(getItems());
-  const [items, setItems] = React.useState([1, 2]);
+  const [items, setItems] = React.useState(getItems());
+  // const [items, setItems] = React.useState([1, 2]);
 
-  // const shuffleItems = () => {
-  //   setItems(getItems());
-  // };
   const shuffleItems = () => {
-    setItems(items[0] === 1 ? [2, 1] : [1, 2]);
+    setItems(getItems());
   };
+  // const shuffleItems = () => {
+  //   setItems(items[0] === 1 ? [2, 1] : [1, 2]);
+  // };
+
+  // useEffect(() => {
+  //   const i = setInterval(() => {
+  //     shuffleItems();
+  //   }, 250);
+  //   return () => {
+  //     clearInterval(i);
+  //   }
+  // }, [])
 
   return (
     <div

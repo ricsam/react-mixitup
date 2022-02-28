@@ -139,11 +139,8 @@ interface IFrame {
  * The styles passed to a cell
  */
 interface ICellStyle {
-  position?: 'absolute';
-  top?: 0;
-  left?: 0;
-  margin?: 0;
   transform?: string;
+  transition?: string;
 }
 
 interface IWrapperStyle {
@@ -531,7 +528,10 @@ export const ReactMixitup = React.memo(
             cells({
               ref: () => {},
               keys: frame.keys,
-              style: () => ({})
+              style: () => ({
+                transition: '0s 0s all ease',
+                transform: 'none'
+              })
             })
           )}
         </React.Fragment>
@@ -568,6 +568,56 @@ export const ReactMixitup = React.memo(
         return indexes;
       };
 
+      const animatedCellStyle = (
+        type: StateType.ANIMATE | StateType.COMMIT,
+        key: string | number,
+        frames: IFrame[]
+      ): ICellStyle => {
+        let z = 1;
+        let x = 0;
+        let y = 0;
+        let x0 = 0;
+        let y0 = 0;
+
+        const indexes = getKeyFrameParticipation(frames, key);
+        if (indexes.length === 0) {
+          throw new Error('something went wrong in the lib');
+        }
+
+        ({ x, y } = frames[indexes[0]].positions[key]);
+        ({ x: x0, y: y0 } = frames[indexes[indexes.length - 1]].positions[key]);
+
+        /* will be added */
+        if (indexes.length === 1) {
+          if (type === StateType.ANIMATE) {
+            z = 1;
+          } else {
+            // scale from 0 -> 1 when going from COMMIT -> ANIMATE
+            z = 0;
+          }
+        }
+
+        /* will be removed */
+        if (!frames[frames.length - 1].keys.includes(key)) {
+          if (type === StateType.ANIMATE) {
+            z = 0;
+          } else {
+            // scale from 1 -> 0 when going from COMMIT -> ANIMATE
+            z = 1;
+          }
+        }
+
+        const xDiff = x - x0;
+        const yDiff = y - y0;
+
+        const transform = `translate3d(${[xDiff, yDiff, 0].join('px,')}px) scale(${z})`;
+
+        const style: ICellStyle = {
+          transform
+        };
+        return style;
+      };
+
       /**
        * animatingFrame
        *
@@ -598,37 +648,7 @@ export const ReactMixitup = React.memo(
                 ref: (key, el) => {},
                 keys: uniq(flatten(frames.map(frame => frame.keys))),
                 style: key => {
-                  let z = 1;
-                  let x = 0;
-                  let y = 0;
-
-                  const indexes = getKeyFrameParticipation(frames, key);
-                  if (indexes.length === 0) {
-                    throw new Error('something went wrong in the lib');
-                  }
-
-                  ({ x, y } = frames[indexes[0]].positions[key]);
-
-                  /* will be added */
-                  if (indexes.length === 1) {
-                    z = 1;
-                  }
-
-                  /* will be removed */
-                  if (!frames[frames.length - 1].keys.includes(key)) {
-                    z = 0;
-                  }
-
-                  const transform = `translate3d(${[x, y, 0].join('px,')}px) scale(${z})`;
-
-                  const style: ICellStyle = {
-                    transform,
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    margin: 0
-                  };
-                  return style;
+                  return animatedCellStyle(StateType.ANIMATE, key, frames);
                 }
               })
             )}
@@ -676,38 +696,7 @@ export const ReactMixitup = React.memo(
                     ref: (key, el) => {},
                     keys: uniq(flatten(refs.current.frames.map(frame => frame.keys))),
                     style: key => {
-                      let z = 1;
-                      let x = 0;
-                      let y = 0;
-
-                      const indexes = getKeyFrameParticipation(refs.current.frames, key);
-                      if (indexes.length === 0) {
-                        throw new Error('something went wrong in the lib');
-                      }
-
-                      ({ x, y } = refs.current.frames[indexes[0]].positions[key]);
-
-                      if (indexes[0] === refs.current.frames.length - 1) {
-                        if (indexes.length > 1) {
-                          /* move from previous position */
-                          ({ x, y } = refs.current.frames[indexes[1]].positions[key]);
-                        } else {
-                          /* appear at current position */
-                          z = 0;
-                        }
-                      }
-
-                      const transform = `translate3d(${[x, y, 0].join('px,')}px) scale(${z})`;
-
-                      const style: ICellStyle = {
-                        transform,
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        margin: 0
-                      };
-
-                      return style;
+                      return animatedCellStyle(StateType.COMMIT, key, refs.current.frames);
                     }
                   })
                 )}
@@ -719,12 +708,12 @@ export const ReactMixitup = React.memo(
 
       // Measure
       if (refs.current.state.type === StateType.MEASURE) {
-        console.log('@rendering stale frame', refs.current.frames[0]);
+        console.log('@measreu', refs.current.frames.length);
         return (
           <React.Fragment key={ROOT_LEVEL}>
             <React.Fragment key={HIDDEN_LEVEL}>
               {refs.current.frames
-                .filter(frame => !frame.hasBeenMeasured)
+                // .filter(frame => !frame.hasBeenMeasured)
                 .map(frame => {
                   return <React.Fragment key={frame.id}>{measureFrame(frame)}</React.Fragment>;
                 })}
