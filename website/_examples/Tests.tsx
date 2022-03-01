@@ -79,7 +79,7 @@ export function Tests() {
             <button onClick={_shuffle}>Shuffle</button>
             <ReactMixitup
               keys={keys}
-              dynamicDirection="vertical"
+              dynamicDirection="off"
               transitionDuration={1000}
               renderCell={(key, style, ref) => (
                 <Box

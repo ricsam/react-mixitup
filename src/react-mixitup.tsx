@@ -25,7 +25,7 @@ interface IPositions {
  *
  * Determines what to render in the component
  */
-enum StateType {
+export enum StateType {
   /**
    * STALE
    *
@@ -69,7 +69,7 @@ enum StateType {
    *
    * For each cell that should be added, i.e. those in new keys not present in old keys, update style.cale to 1
    */
-  ANIMATE = 'ANIMATE',
+  ANIMATE = 'ANIMATE'
   /**
    * ANIMATE_MEASURE
    *
@@ -83,7 +83,8 @@ enum StateType {
    * Render the same as in ANIMATE while rendering the measuring component.
    *
    */
-  ANIMATE_MEASURE = 'ANIMATE_MEASURE',
+  // replaced by MEASURE where state.whileAnimating = true;
+  // ANIMATE_MEASURE = 'ANIMATE_MEASURE',
   /**
    * ANIMATE_COMMIT
    *
@@ -97,7 +98,8 @@ enum StateType {
    * All new cells, i.e those keys in next keys which are not in old keys should be translated to their
    * next position, and scaled to 0.
    */
-  ANIMATE_COMMIT = 'ANIMATE_COMMIT'
+  // replaced by COMMIT where state.whileAnimating = true;
+  // ANIMATE_COMMIT = 'ANIMATE_COMMIT'
 }
 
 /**
@@ -131,6 +133,11 @@ interface IFrame {
    * If the frame has been measured
    */
   hasBeenMeasured: boolean;
+
+  /**
+   * a hash generated from the keys
+   */
+  hash: string;
 }
 
 /**
@@ -194,7 +201,8 @@ interface IProps {
   renderWrapper?: (
     style: IWrapperStyle,
     ref: React.Ref<any>,
-    cells: JSX.Element[]
+    cells: JSX.Element[],
+    state: StateType
   ) => React.ReactNode | JSX.Element;
 
   /**
@@ -205,9 +213,17 @@ interface IProps {
   /**
    * If the wrapper should grow/shrink vertically or horizontally when adding and removing cells
    */
-  dynamicDirection: 'horizontal' | 'vertical';
+  dynamicDirection: 'horizontal' | 'vertical' | 'off';
 
   transitionDuration: number;
+
+  // default false. If true will remeasure all previous frames.
+  // only useful if resizing container while animation is slow and multiple animations are queued.
+  reMeasureAllPreviousFramesOnNewKeys?: boolean;
+
+  // default undefined. if number will render the measure container, and keep it for debugMeasure ms
+  // before removing
+  debugMeasure?: number;
 }
 
 /**
@@ -310,25 +326,27 @@ const NotifyAboutRendered = ({
 
 export const ReactMixitup = React.memo(
   React.forwardRef(
-    (
-      {
+    (props: IProps, outerBoundRef: React.Ref<HTMLDivElement>): JSX.Element | null => {
+      const {
         keys,
         renderCell,
         renderWrapper = defaultRenderWrapper,
         disableTransition = false,
         dynamicDirection,
         transitionDuration
-      }: IProps,
-      outerBoundRef: React.Ref<HTMLDivElement>
-    ): JSX.Element | null => {
+      } = props;
+
       /* ensure every item is a string */
       if (new Set(keys).size !== keys.length) {
         throw new Error('In prop keys: every key must be unique');
       }
 
+      const nextHash = getKeysHash(keys);
+
       const createFrame = (): IFrame => {
         return {
           id: String(Math.random()),
+          hash: nextHash,
           keys,
           containerHeight: undefined,
           containerWidth: undefined,
@@ -362,23 +380,71 @@ export const ReactMixitup = React.memo(
       };
 
       React.useEffect(() => {
-        if (refs.current.state.type === StateType.MEASURE) {
-          refs.current.state = {
-            type: StateType.COMMIT,
-            whileAnimating: refs.current.state.whileAnimating
-          };
-          update();
-        } else if (refs.current.state.type === StateType.COMMIT) {
-          refs.current.state = {
-            type: StateType.ANIMATE
-          };
-          window.requestAnimationFrame(() => {
+        const goToStaleOrNext = (cb: () => void) => {
+          if (!props.debugMeasure) {
+            cb();
+            return;
+          }
+
+          // only use case is when running with debugMeasure
+          // then you can update many times while in commit
+          // and end up at with the same keys as in the start
+          const lastFrame = refs.current.frames[refs.current.frames.length - 1];
+          if (refs.current.frames[0].hash === lastFrame.hash) {
+            refs.current.state = {
+              type: StateType.STALE,
+              frame: lastFrame
+            };
+            update();
+          } else {
+            cb();
+          }
+        };
+        const goToAnimate = () => {
+          // from commit or measure
+          goToStaleOrNext(() => {
+            refs.current.state = {
+              type: StateType.ANIMATE
+            };
+            window.requestAnimationFrame(() => {
+              update();
+            });
+          });
+        };
+        const goToCommit = (whileAnimating: boolean) => {
+          // from measure
+          goToStaleOrNext(() => {
+            refs.current.state = {
+              type: StateType.COMMIT,
+              whileAnimating
+            };
             update();
           });
+        };
+        const maybeDelay = (cb: () => void) => {
+          if (props.debugMeasure) {
+            const t = setTimeout(() => {
+              cb();
+            }, props.debugMeasure);
+            return () => {
+              clearTimeout(t);
+            };
+          }
+          cb();
+        };
+        if (refs.current.state.type === StateType.MEASURE) {
+          if (dynamicDirection === 'off') {
+            // skip COMMIT phase, go straight to ANIMATE
+            return maybeDelay(() => goToAnimate());
+          }
+          const whileAnimating = refs.current.state.whileAnimating;
+          return maybeDelay(() => goToCommit(whileAnimating));
+        }
+
+        if (refs.current.state.type === StateType.COMMIT) {
+          goToAnimate();
         }
       });
-
-      const nextHash = getKeysHash(keys);
 
       if (refs.current.hash === undefined) {
         // first render
@@ -453,13 +519,17 @@ export const ReactMixitup = React.memo(
       const measureFrame = (frame: IFrame) => (
         <NotifyAboutRendered frame={frame}>
           {renderWrapper(
-            {
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              visibility: 'hidden',
-              zIndex: -1
-            },
+            props.debugMeasure
+              ? {
+                  position: 'absolute'
+                }
+              : {
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  visibility: 'hidden',
+                  zIndex: -1
+                },
             el => {
               wrapperMeasureContainerSize(frame, el);
             },
@@ -469,7 +539,8 @@ export const ReactMixitup = React.memo(
               },
               keys: frame.keys,
               style: () => ({})
-            })
+            }),
+            StateType.MEASURE
           )}
         </NotifyAboutRendered>
       );
@@ -532,7 +603,8 @@ export const ReactMixitup = React.memo(
                 transition: '0s 0s all ease',
                 transform: 'none'
               })
-            })
+            }),
+            StateType.STALE
           )}
         </React.Fragment>
       );
@@ -650,7 +722,8 @@ export const ReactMixitup = React.memo(
                 style: key => {
                   return animatedCellStyle(StateType.ANIMATE, key, frames);
                 }
-              })
+              }),
+              StateType.ANIMATE
             )}
           </React.Fragment>
         );
@@ -698,7 +771,8 @@ export const ReactMixitup = React.memo(
                     style: key => {
                       return animatedCellStyle(StateType.COMMIT, key, refs.current.frames);
                     }
-                  })
+                  }),
+                  StateType.COMMIT
                 )}
               </React.Fragment>
             </React.Fragment>
@@ -708,15 +782,24 @@ export const ReactMixitup = React.memo(
 
       // Measure
       if (refs.current.state.type === StateType.MEASURE) {
-        console.log('@measreu', refs.current.frames.length);
+        const len = refs.current.frames.length;
+        const lastFrame = refs.current.frames[len - 1];
+        let measureFrames = refs.current.frames;
+        if (!props.reMeasureAllPreviousFramesOnNewKeys) {
+          measureFrames = [
+            ...refs.current.frames.filter(
+              (frame, index) => !frame.hasBeenMeasured && index < len - 1
+            ),
+            lastFrame
+          ];
+        }
+        console.log('@numframes', measureFrames.length);
         return (
           <React.Fragment key={ROOT_LEVEL}>
             <React.Fragment key={HIDDEN_LEVEL}>
-              {refs.current.frames
-                // .filter(frame => !frame.hasBeenMeasured)
-                .map(frame => {
-                  return <React.Fragment key={frame.id}>{measureFrame(frame)}</React.Fragment>;
-                })}
+              {measureFrames.map(frame => {
+                return <React.Fragment key={frame.id}>{measureFrame(frame)}</React.Fragment>;
+              })}
             </React.Fragment>
             <React.Fragment key={VISIBLE_LEVEL}>
               {refs.current.state.whileAnimating

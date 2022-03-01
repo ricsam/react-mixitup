@@ -26,9 +26,10 @@ npm install react-mixitup
 
 The naming used in react-mixitup is based on the use case of rendering a table.
 
-**cell** - a table cell
-
-**wrapper** - a parent container to the cells, i.e. the container holding the rows and columns
+- **cell** - a table cell
+- **wrapper** - a parent container to the cells, i.e. the container holding the rows and columns
+- **frame** - each set of keys that are passed instanciates a frame which holds DOM data about each rendered cell
+- **stage** - the stage determines what should be returned by ReactMixitup. The StageType is: `STALE | MEASURE | COMMIT | ANIMATE`,
 
 :::
 
@@ -154,13 +155,15 @@ dynamicDirection: 'horizontal' | 'vertical' | 'off';
 ```
 
 
-import {Horizontal, Vertical} from '../_examples/dynamicDirection';
+import {Horizontal, Vertical, Off} from '../_examples/dynamicDirection';
 
 Example:
 
 <Horizontal />
 <br />
 <Vertical />
+<br />
+<Off />
 <br />
 
 **transitionDuration** - should match the longest transition-duration used
@@ -169,35 +172,40 @@ Example:
 transitionDuration: number;
 ```
 
+### Advanced props
+
 **disableTransition** - [optional] disables all transition
-
-
-
-Render
-
-Generate a new Docusaurus site using the **classic template**.
-
-The classic template will automatically be added to your project after you run the command:
-
-```bash
-npm init docusaurus@latest my-website classic
+```tsx
+disableTransition?: boolean;
 ```
 
-You can type this command into Command Prompt, Powershell, Terminal, or any other integrated terminal of your code editor.
+**debugMeasure** - [optional] debug the measure stage
 
-The command also installs all necessary dependencies you need to run Docusaurus.
+Sets for how long in milliseconds the measure wrapper should be rendered.
 
-## Start your site
+By default the measure wrapper is hidden. When this prop is truthy it will be visible.
 
-Run the development server:
-
-```bash
-cd my-website
-npm run start
+The measure wrapper should be the same width and height as the stale wrapper.
+```tsx
+debugMeasure?: number;
 ```
 
-The `cd` command changes the directory you're working with. In order to work with your newly created Docusaurus site, you'll need to navigate the terminal there.
+import {DebugMeasure} from '../_examples/debugMeasure';
 
-The `npm run start` command builds your website locally and serves it through a development server, ready for you to view at http://localhost:3000/.
+Example:
 
-Open `docs/intro.md` (this page) and edit some lines: the site **reloads automatically** and displays your changes.
+<DebugMeasure />
+<br />
+
+
+**reMeasureAllPreviousFramesOnNewKeys** - [optional]
+If falsy only unmeasured frames and the previous frame will be rendered.
+When true all previous frames are rendered and measured each time the keys props is updated.
+
+This has impact if the parent container resizes while multiple animations are dispatched.
+
+If the parent container resizes each cell must be re-measured. This has a performance impact.
+
+Thus by default only the previous frame is measured ? (or maybe the rendered frame should be rendered)
+
+
