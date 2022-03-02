@@ -1,5 +1,5 @@
 import React from 'react';
-import { ReactMixitup, StateType } from '../../src/react-mixitup';
+import { ReactMixitup, StageType } from '../../src/react-mixitup';
 import { shuffle } from 'lodash';
 
 const ANIMATION_DURATION = 250;
@@ -15,11 +15,11 @@ export const DebugMeasure = () => {
         padding: 16
       }}
     >
-      <p>
+      <div>
         <p>
           <strong>debugMeasure = 1000</strong>
         </p>
-      </p>
+      </div>
       <div style={{ display: 'flex', alignItems: 'center', paddingTop: '12px' }}>
         <button
           onClick={() => setKeys(keys[0] === 1 ? [3, 2, 1, 4, 5] : [1, 2, 3])}
@@ -45,7 +45,7 @@ export const DebugMeasure = () => {
               </div>
             )}
             // Optional. ref and style must be passed
-            renderWrapper={(style, ref, cells, state) => {
+            renderWrapper={(style, ref, cells, stage) => {
               return (
                 <div
                   style={{
@@ -55,9 +55,10 @@ export const DebugMeasure = () => {
                     paddingRight: '4px',
                     height: '24px',
                     alignItems: 'center',
-                    background: state === StateType.MEASURE ? 'rgba(0, 0, 0, 0.12)' : 'transparent',
-                    top: state === StateType.MEASURE ? -24 : 0,
-                    ...style,
+                    background: stage === StageType.MEASURE ? 'rgba(0, 0, 0, 0.12)' : 'transparent',
+                    top: stage === StageType.MEASURE ? -24 : 0,
+                    left: 0,
+                    ...style
                     // position: 'static',
                   }}
                   ref={ref}

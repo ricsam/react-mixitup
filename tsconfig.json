@@ -19,6 +19,6 @@
     ]
   },
   "files": [
-    "src/react-mixitup.tsx"
+    "src/react-mixitup.tsx", "./src/createFrame.tsx"
   ]
 }

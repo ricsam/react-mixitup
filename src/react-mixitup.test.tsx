@@ -3,17 +3,13 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { ReactMixitup } from './react-mixitup';
 
-const strList = (l: number[]) => {
-  return l.map(v => String(v));
-};
-
 describe('Dummy test', () => {
   it('works if true is truthy', () => {
     const Example = () => {
-      const [keys, setKeys] = React.useState(strList([1, 2, 3, 4]));
+      const [keys, setKeys] = React.useState([1, 2, 3, 4]);
 
       const shuffleKeys = React.useCallback(() => {
-        setKeys(strList(shuffle(range(Math.round(Math.random() * 15)))));
+        setKeys(shuffle(range(Math.round(Math.random() * 15))));
       }, []);
 
       return (
@@ -21,6 +17,8 @@ describe('Dummy test', () => {
           <button onClick={shuffleKeys}>Shuffle</button>
           <ReactMixitup
             keys={keys}
+            dynamicDirection="vertical"
+            transitionDuration={250}
             renderCell={(key, style, ref) => {
               return (
                 <div

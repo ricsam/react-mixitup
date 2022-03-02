@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { createFrame } from './utils';
 
 /**
  * IPosition
@@ -21,22 +22,22 @@ interface IPositions {
 }
 
 /**
- * State
+ * StageType
  *
  * Determines what to render in the component
  */
-export enum StateType {
+export enum StageType {
   /**
    * STALE
    *
-   * If the animation finishes the next state will be STALE.
+   * If the animation finishes the next stage will be STALE.
    * Render the cells in the wrapper statically positioned.
    */
   STALE = 'STALE',
   /**
    * MEASURE
    *
-   * If oldKeys.join() != nextKeys.join() then the next state will be MEASURE.
+   * If oldKeys.join() != nextKeys.join() then the next stage will be MEASURE.
    *
    * Render next cells in a hidden div and measure the position of each next cell.
    * Measure the height of the next hidden wrapper.
@@ -48,7 +49,7 @@ export enum StateType {
   /**
    * COMMIT
    *
-   * If state is MEASURE then the next state will be COMMIT.
+   * If stage is MEASURE then the next stage will be COMMIT.
    *
    * Render all unique cells from the old list of keys and the next list of keys.
    *
@@ -61,7 +62,7 @@ export enum StateType {
   /**
    * ANIMATE
    *
-   * If state is COMMIT or ANIMATE_COMMIT then the next state will be ANIMATE.
+   * If stage is COMMIT or ANIMATE_COMMIT then the next stage will be ANIMATE.
    *
    * For each cell that should be moved, i.e the intersection between old keys and new keys, update style.translate to the new position.
    *
@@ -73,7 +74,7 @@ export enum StateType {
   /**
    * ANIMATE_MEASURE
    *
-   * If state is ANIMATE, and the keys are updated then the next state will be ANIMATE_MEASURE.
+   * If stage is ANIMATE, and the keys are updated then the next stage will be ANIMATE_MEASURE.
    *
    * Render next cells in a hidden div and measure the position of each next cell.
    * Measure the height of the next hidden wrapper.
@@ -83,12 +84,12 @@ export enum StateType {
    * Render the same as in ANIMATE while rendering the measuring component.
    *
    */
-  // replaced by MEASURE where state.whileAnimating = true;
+  // replaced by MEASURE where stage.whileAnimating = true;
   // ANIMATE_MEASURE = 'ANIMATE_MEASURE',
   /**
    * ANIMATE_COMMIT
    *
-   * If state is ANIMATE_MEASURE then the next state will be ANIMATE_COMMIT.
+   * If stage is ANIMATE_MEASURE then the next stage will be ANIMATE_COMMIT.
    *
    * Render all unique cells from the old lists of keys (notice plural on lists) and the next list of keys.
    * That is the the same as in ANIMATE.
@@ -98,7 +99,7 @@ export enum StateType {
    * All new cells, i.e those keys in next keys which are not in old keys should be translated to their
    * next position, and scaled to 0.
    */
-  // replaced by COMMIT where state.whileAnimating = true;
+  // replaced by COMMIT where stage.whileAnimating = true;
   // ANIMATE_COMMIT = 'ANIMATE_COMMIT'
 }
 
@@ -107,7 +108,7 @@ export enum StateType {
  *
  * Holds information about the keys of rendered cells
  */
-interface IFrame {
+export interface IFrame {
   /**
    * The height of the container when all cells are rendered.
    */
@@ -145,17 +146,18 @@ interface IFrame {
  *
  * The styles passed to a cell
  */
-interface ICellStyle {
+export interface ICellStyle {
   transform?: string;
   transition?: string;
 }
 
-interface IWrapperStyle {
-  position?: 'absolute' | 'relative';
+export interface IWrapperStyle {
+  /**
+   * used when rendering a measure stage
+   */
+  position?: 'absolute';
   width?: number;
   height?: number;
-  top?: 0;
-  left?: 0;
   visibility?: 'hidden';
   zIndex?: -1;
 }
@@ -185,7 +187,9 @@ interface IProps {
   renderCell: (
     key: string | number,
     style: ICellStyle,
-    ref: React.Ref<any>
+    ref: React.Ref<any>,
+    stage: StageType,
+    frame: IFrame
   ) => React.ReactNode | JSX.Element;
 
   /**
@@ -202,7 +206,8 @@ interface IProps {
     style: IWrapperStyle,
     ref: React.Ref<any>,
     cells: JSX.Element[],
-    state: StateType
+    stage: StageType,
+    frame: IFrame
   ) => React.ReactNode | JSX.Element;
 
   /**
@@ -229,24 +234,25 @@ interface IProps {
 /**
  * Creates a hash of the keys in order to determine if the keys are updated
  */
-function getKeysHash(keys: (string | number)[]): string {
+export function getKeysHash(keys: (string | number)[]): string {
   return keys.map(k => `${(typeof k)[0]}${k}`).join(',');
 }
 
-/**
- * Flattens a nested array
- */
-const flatten = <T extends unknown>(nested: (T | T[])[]): T[] => {
-  const flatList: T[] = [];
-  const iter = (item: T | T[]) => {
-    if (Array.isArray(item)) {
-      item.forEach(iter);
-    } else {
-      flatList.push(item);
-    }
-  };
-  nested.forEach(iter);
-  return flatList;
+export enum DOMLevel {
+  ROOT = 'ROOT',
+  VISIBLE = 'VISIBLE',
+  WRAPPER = 'WRAPPER',
+  HIDDEN = 'HIDDEN'
+}
+
+export const MixitupFragment = ({
+  children,
+  level
+}: {
+  children: React.ReactNode;
+  level: DOMLevel;
+}) => {
+  return <React.Fragment>{children}</React.Fragment>;
 };
 
 /**
@@ -284,30 +290,21 @@ const defaultRenderWrapper: RenderWrapper = (style, ref, cells) => {
   );
 };
 
-const uniq = (values: (string | number)[]) => {
-  const seen = new Set(values);
-  const uniq: (string | number)[] = [];
-  seen.forEach(value => {
-    uniq.push(value);
-  });
-  return uniq;
-};
-
-type State =
+type Stage =
   | {
-      type: StateType.MEASURE;
+      type: StageType.MEASURE;
       frameToMeasure: IFrame;
       whileAnimating: boolean;
     }
   | {
-      type: StateType.ANIMATE;
+      type: StageType.ANIMATE;
     }
   | {
-      type: StateType.COMMIT;
+      type: StageType.COMMIT;
       whileAnimating: boolean;
     }
   | {
-      type: StateType.STALE;
+      type: StageType.STALE;
       frame: IFrame;
     };
 
@@ -343,32 +340,20 @@ export const ReactMixitup = React.memo(
 
       const nextHash = getKeysHash(keys);
 
-      const createFrame = (): IFrame => {
-        return {
-          id: String(Math.random()),
-          hash: nextHash,
-          keys,
-          containerHeight: undefined,
-          containerWidth: undefined,
-          positions: {},
-          hasBeenMeasured: false
-        };
-      };
-
       const refs = React.useRef<{
         frames: IFrame[];
         persistedElement: JSX.Element | null;
         hash: undefined | string;
-        state: State;
+        stage: Stage;
       }>(undefined as any);
 
       if (!refs.current) {
-        const frame = createFrame();
+        const frame = createFrame(keys);
         refs.current = {
           frames: [frame],
           persistedElement: null,
           hash: undefined,
-          state: { type: StateType.STALE, frame }
+          stage: { type: StageType.STALE, frame }
         };
       }
 
@@ -391,8 +376,8 @@ export const ReactMixitup = React.memo(
           // and end up at with the same keys as in the start
           const lastFrame = refs.current.frames[refs.current.frames.length - 1];
           if (refs.current.frames[0].hash === lastFrame.hash) {
-            refs.current.state = {
-              type: StateType.STALE,
+            refs.current.stage = {
+              type: StageType.STALE,
               frame: lastFrame
             };
             update();
@@ -403,8 +388,8 @@ export const ReactMixitup = React.memo(
         const goToAnimate = () => {
           // from commit or measure
           goToStaleOrNext(() => {
-            refs.current.state = {
-              type: StateType.ANIMATE
+            refs.current.stage = {
+              type: StageType.ANIMATE
             };
             window.requestAnimationFrame(() => {
               update();
@@ -414,8 +399,8 @@ export const ReactMixitup = React.memo(
         const goToCommit = (whileAnimating: boolean) => {
           // from measure
           goToStaleOrNext(() => {
-            refs.current.state = {
-              type: StateType.COMMIT,
+            refs.current.stage = {
+              type: StageType.COMMIT,
               whileAnimating
             };
             update();
@@ -432,16 +417,16 @@ export const ReactMixitup = React.memo(
           }
           cb();
         };
-        if (refs.current.state.type === StateType.MEASURE) {
+        if (refs.current.stage.type === StageType.MEASURE) {
           if (dynamicDirection === 'off') {
             // skip COMMIT phase, go straight to ANIMATE
             return maybeDelay(() => goToAnimate());
           }
-          const whileAnimating = refs.current.state.whileAnimating;
+          const whileAnimating = refs.current.stage.whileAnimating;
           return maybeDelay(() => goToCommit(whileAnimating));
         }
 
-        if (refs.current.state.type === StateType.COMMIT) {
+        if (refs.current.stage.type === StageType.COMMIT) {
           goToAnimate();
         }
       });
@@ -453,21 +438,21 @@ export const ReactMixitup = React.memo(
 
       if (refs.current.hash !== nextHash) {
         refs.current.hash = nextHash;
-        const frame = createFrame();
+        const frame = createFrame(keys);
         if (disableTransition) {
           refs.current.frames.splice(0, refs.current.frames.length, frame);
-          refs.current.state = {
-            type: StateType.STALE,
+          refs.current.stage = {
+            type: StageType.STALE,
             frame
           };
         } else {
           refs.current.frames.push(frame);
           const whileAnimating =
-            'whileAnimating' in refs.current.state
-              ? refs.current.state.whileAnimating
-              : refs.current.state.type === StateType.ANIMATE;
-          refs.current.state = {
-            type: StateType.MEASURE,
+            'whileAnimating' in refs.current.stage
+              ? refs.current.stage.whileAnimating
+              : refs.current.stage.type === StageType.ANIMATE;
+          refs.current.stage = {
+            type: StageType.MEASURE,
             frameToMeasure: frame,
             whileAnimating
           };
@@ -495,11 +480,13 @@ export const ReactMixitup = React.memo(
       const cells = ({
         ref,
         style,
-        keys
+        keys,
+        stageType
       }: {
-        keys: (string | number)[];
+        keys: { key: string | number; frame: IFrame }[];
         ref: (key: string | number, el: HTMLElement) => void;
         style: (key: string | number) => ICellStyle;
+        stageType: StageType;
       }) => {
         const makeRef = (key: string | number) => {
           return (el: HTMLElement | null) => {
@@ -509,9 +496,13 @@ export const ReactMixitup = React.memo(
           };
         };
 
-        const cells = keys.map(key => (
-          <React.Fragment key={key}>{renderCell(key, style(key), makeRef(key))}</React.Fragment>
-        ));
+        const cells = keys.map(({ key, frame }) => {
+          return (
+            <React.Fragment key={key}>
+              {renderCell(key, style(key), makeRef(key), stageType, frame)}
+            </React.Fragment>
+          );
+        });
 
         return cells;
       };
@@ -525,8 +516,6 @@ export const ReactMixitup = React.memo(
                 }
               : {
                   position: 'absolute',
-                  top: 0,
-                  left: 0,
                   visibility: 'hidden',
                   zIndex: -1
                 },
@@ -537,18 +526,20 @@ export const ReactMixitup = React.memo(
               ref: (key, el) => {
                 measureGridItems(frame, key, el);
               },
-              keys: frame.keys,
-              style: () => ({})
+              keys: frame.keys.map(key => ({ key, frame })),
+              style: staleStyle,
+              stageType: StageType.MEASURE
             }),
-            StateType.MEASURE
+            StageType.MEASURE,
+            frame
           )}
         </NotifyAboutRendered>
       );
 
       const onEndOfTransition = () => {
         const frame = refs.current.frames[refs.current.frames.length - 1];
-        refs.current.state = {
-          type: StateType.STALE,
+        refs.current.stage = {
+          type: StageType.STALE,
           frame
         };
         // stale should always only have 1 frame
@@ -558,7 +549,7 @@ export const ReactMixitup = React.memo(
       };
 
       React.useEffect(() => {
-        if (refs.current.state.type === StateType.ANIMATE) {
+        if (refs.current.stage.type === StageType.ANIMATE) {
           const timeout = setTimeout(() => {
             onEndOfTransition();
           }, transitionDuration);
@@ -569,16 +560,16 @@ export const ReactMixitup = React.memo(
         }
       });
 
-      console.log('refs', JSON.stringify(refs.current.state, null, 2));
+      const staleStyle = (): ICellStyle => ({
+        transition: '0s 0s all ease',
+        transform: 'none'
+      });
 
       // BEGIN RENDER
 
       // The keys used on the React.Fragments are there to assist React in preseving the DOM tree nodes and
       // prevent unmounting of components which interupts animation
-      const ROOT_LEVEL = 'root-level';
-      const VISIBLE_LEVEL = 'visible-level';
-      const WRAPPER_LEVEL = 'wrapper-level';
-      const HIDDEN_LEVEL = 'hidden-level';
+
       // The hierarchies:
       // root-level > visible-level > wrapper-level > renderWrapper
       //      ↳     > hidden-level > [key] > wrapper-level > NotifyAboutRendered > renderWrapper
@@ -592,31 +583,30 @@ export const ReactMixitup = React.memo(
        * @returns React.ReactNode | JSX.Element
        */
       const staleFrame = (frame: IFrame) => (
-        <React.Fragment key={WRAPPER_LEVEL}>
+        <MixitupFragment key={DOMLevel.WRAPPER} level={DOMLevel.WRAPPER}>
           {renderWrapper(
             {},
             () => {},
             cells({
               ref: () => {},
-              keys: frame.keys,
-              style: () => ({
-                transition: '0s 0s all ease',
-                transform: 'none'
-              })
+              keys: frame.keys.map(key => ({ key, frame })),
+              style: staleStyle,
+              stageType: StageType.STALE
             }),
-            StateType.STALE
+            StageType.STALE,
+            frame
           )}
-        </React.Fragment>
+        </MixitupFragment>
       );
 
       // If transitions are disabled, always render the staleFrame node
       if (disableTransition) {
         return (
-          <React.Fragment key={ROOT_LEVEL}>
-            <React.Fragment key={VISIBLE_LEVEL}>
+          <MixitupFragment key={DOMLevel.ROOT} level={DOMLevel.ROOT}>
+            <MixitupFragment key={DOMLevel.VISIBLE} level={DOMLevel.VISIBLE}>
               {staleFrame(refs.current.frames[refs.current.frames.length - 1])}
-            </React.Fragment>
-          </React.Fragment>
+            </MixitupFragment>
+          </MixitupFragment>
         );
       }
 
@@ -641,7 +631,7 @@ export const ReactMixitup = React.memo(
       };
 
       const animatedCellStyle = (
-        type: StateType.ANIMATE | StateType.COMMIT,
+        type: StageType.ANIMATE | StageType.COMMIT,
         key: string | number,
         frames: IFrame[]
       ): ICellStyle => {
@@ -661,7 +651,7 @@ export const ReactMixitup = React.memo(
 
         /* will be added */
         if (indexes.length === 1) {
-          if (type === StateType.ANIMATE) {
+          if (type === StageType.ANIMATE) {
             z = 1;
           } else {
             // scale from 0 -> 1 when going from COMMIT -> ANIMATE
@@ -671,7 +661,7 @@ export const ReactMixitup = React.memo(
 
         /* will be removed */
         if (!frames[frames.length - 1].keys.includes(key)) {
-          if (type === StateType.ANIMATE) {
+          if (type === StageType.ANIMATE) {
             z = 0;
           } else {
             // scale from 1 -> 0 when going from COMMIT -> ANIMATE
@@ -690,6 +680,21 @@ export const ReactMixitup = React.memo(
         return style;
       };
 
+      const getAllUniqueKeysForFrames = (frames: IFrame[]) => {
+        const keys: { frame: IFrame; key: string | number }[] = [];
+        const keysSet = new Set<string | number>();
+        frames.forEach(frame => {
+          frame.keys.forEach(key => {
+            if (keysSet.has(key)) {
+              return;
+            }
+            keysSet.add(key);
+            keys.push({ frame, key });
+          });
+        });
+        return keys;
+      };
+
       /**
        * animatingFrame
        *
@@ -700,51 +705,54 @@ export const ReactMixitup = React.memo(
        * @returns JSX.Element
        */
       const animatingFrame = (frames: IFrame[]) => {
-        const height = frames[frames.length - 1].containerHeight!;
-        const width = frames[frames.length - 1].containerWidth!;
+        const lastFrame = frames[frames.length - 1];
+        const height = lastFrame.containerHeight!;
+        const width = lastFrame.containerWidth!;
         const styles: IWrapperStyle = {};
         if (dynamicDirection === 'horizontal') {
           styles.width = width;
         } else {
           styles.height = height;
         }
+        const keys = getAllUniqueKeysForFrames(frames);
         return (
-          <React.Fragment key={WRAPPER_LEVEL}>
+          <MixitupFragment key={DOMLevel.WRAPPER} level={DOMLevel.WRAPPER}>
             {renderWrapper(
               {
-                ...styles,
-                position: 'relative'
+                ...styles
               },
               () => {},
               cells({
                 ref: (key, el) => {},
-                keys: uniq(flatten(frames.map(frame => frame.keys))),
+                keys: keys,
                 style: key => {
-                  return animatedCellStyle(StateType.ANIMATE, key, frames);
-                }
+                  return animatedCellStyle(StageType.ANIMATE, key, frames);
+                },
+                stageType: StageType.ANIMATE
               }),
-              StateType.ANIMATE
+              StageType.ANIMATE,
+              lastFrame
             )}
-          </React.Fragment>
+          </MixitupFragment>
         );
       };
 
       // When animating render the animatingFrame
-      if (refs.current.state.type === StateType.ANIMATE) {
+      if (refs.current.stage.type === StageType.ANIMATE) {
         return (
-          <React.Fragment key={ROOT_LEVEL}>
-            <React.Fragment key={VISIBLE_LEVEL}>
+          <MixitupFragment key={DOMLevel.ROOT} level={DOMLevel.ROOT}>
+            <MixitupFragment key={DOMLevel.VISIBLE} level={DOMLevel.VISIBLE}>
               {animatingFrame(refs.current.frames)}
-            </React.Fragment>
-          </React.Fragment>
+            </MixitupFragment>
+          </MixitupFragment>
         );
       }
 
       // Commit will translate all elements to their corresponding static location of the previous frame.
-      if (refs.current.state.type === StateType.COMMIT) {
-        const state = refs.current.state;
+      if (refs.current.stage.type === StageType.COMMIT) {
+        const stage = refs.current.stage;
         let sizeFrame = refs.current.frames[refs.current.frames.length - 2];
-        if (state.whileAnimating) {
+        if (stage.whileAnimating) {
           sizeFrame = refs.current.frames[refs.current.frames.length - 1];
         }
         const height = sizeFrame.containerHeight!;
@@ -755,33 +763,36 @@ export const ReactMixitup = React.memo(
         } else {
           styles.height = height;
         }
+        const keys = getAllUniqueKeysForFrames(refs.current.frames);
+
         return (
-          <React.Fragment key={ROOT_LEVEL}>
-            <React.Fragment key={VISIBLE_LEVEL}>
-              <React.Fragment key={WRAPPER_LEVEL}>
+          <MixitupFragment key={DOMLevel.ROOT} level={DOMLevel.ROOT}>
+            <MixitupFragment key={DOMLevel.VISIBLE} level={DOMLevel.VISIBLE}>
+              <MixitupFragment key={DOMLevel.WRAPPER} level={DOMLevel.WRAPPER}>
                 {renderWrapper(
                   {
-                    ...styles,
-                    position: 'relative'
+                    ...styles
                   },
                   () => {},
                   cells({
                     ref: (key, el) => {},
-                    keys: uniq(flatten(refs.current.frames.map(frame => frame.keys))),
+                    keys,
                     style: key => {
-                      return animatedCellStyle(StateType.COMMIT, key, refs.current.frames);
-                    }
+                      return animatedCellStyle(StageType.COMMIT, key, refs.current.frames);
+                    },
+                    stageType: StageType.COMMIT
                   }),
-                  StateType.COMMIT
+                  StageType.COMMIT,
+                  sizeFrame
                 )}
-              </React.Fragment>
-            </React.Fragment>
-          </React.Fragment>
+              </MixitupFragment>
+            </MixitupFragment>
+          </MixitupFragment>
         );
       }
 
       // Measure
-      if (refs.current.state.type === StateType.MEASURE) {
+      if (refs.current.stage.type === StageType.MEASURE) {
         const len = refs.current.frames.length;
         const lastFrame = refs.current.frames[len - 1];
         let measureFrames = refs.current.frames;
@@ -793,32 +804,30 @@ export const ReactMixitup = React.memo(
             lastFrame
           ];
         }
-        console.log('@numframes', measureFrames.length);
         return (
-          <React.Fragment key={ROOT_LEVEL}>
-            <React.Fragment key={HIDDEN_LEVEL}>
+          <MixitupFragment key={DOMLevel.ROOT} level={DOMLevel.ROOT}>
+            <MixitupFragment key={DOMLevel.HIDDEN} level={DOMLevel.HIDDEN}>
               {measureFrames.map(frame => {
                 return <React.Fragment key={frame.id}>{measureFrame(frame)}</React.Fragment>;
               })}
-            </React.Fragment>
-            <React.Fragment key={VISIBLE_LEVEL}>
-              {refs.current.state.whileAnimating
+            </MixitupFragment>
+            <MixitupFragment key={DOMLevel.VISIBLE} level={DOMLevel.VISIBLE}>
+              {refs.current.stage.whileAnimating
                 ? animatingFrame(refs.current.frames.filter(frame => frame.hasBeenMeasured))
                 : staleFrame(refs.current.frames[0])}
-            </React.Fragment>
-          </React.Fragment>
+            </MixitupFragment>
+          </MixitupFragment>
         );
       }
 
-      // If state is stale render the stale frame
-      if (refs.current.state.type === StateType.STALE) {
-        console.log('@rendering stale frame', refs.current.state.frame);
+      // If stage is stale render the stale frame
+      if (refs.current.stage.type === StageType.STALE) {
         return (
-          <React.Fragment key={ROOT_LEVEL}>
-            <React.Fragment key={VISIBLE_LEVEL}>
-              {staleFrame(refs.current.state.frame)}
-            </React.Fragment>
-          </React.Fragment>
+          <MixitupFragment key={DOMLevel.ROOT} level={DOMLevel.ROOT}>
+            <MixitupFragment key={DOMLevel.VISIBLE} level={DOMLevel.VISIBLE}>
+              {staleFrame(refs.current.stage.frame)}
+            </MixitupFragment>
+          </MixitupFragment>
         );
       }
 

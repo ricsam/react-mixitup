@@ -1,0 +1,313 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`can render should cycle through stages 1`] = `
+<div
+  data-frame-id="1"
+  data-stage="STALE"
+  id="wrapper"
+  style={Object {}}
+>
+  <div
+    data-frame-id="1"
+    data-key={1}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    1
+  </div>
+  <div
+    data-frame-id="1"
+    data-key={2}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    2
+  </div>
+  <div
+    data-frame-id="1"
+    data-key={3}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    3
+  </div>
+</div>
+`;
+
+exports[`can render should cycle through stages 2`] = `
+<div
+  data-frame-id="1"
+  data-stage="STALE"
+  id="wrapper"
+  style={Object {}}
+>
+  <div
+    data-frame-id="1"
+    data-key={1}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    1
+  </div>
+  <div
+    data-frame-id="1"
+    data-key={2}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    2
+  </div>
+  <div
+    data-frame-id="1"
+    data-key={3}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    3
+  </div>
+</div>
+`;
+
+exports[`can render should cycle through stages 3`] = `
+<div
+  data-frame-id="2"
+  data-stage="STALE"
+  id="wrapper"
+  style={Object {}}
+>
+  <div
+    data-frame-id="2"
+    data-key={3}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    3
+  </div>
+  <div
+    data-frame-id="2"
+    data-key={2}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    2
+  </div>
+  <div
+    data-frame-id="2"
+    data-key={1}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    1
+  </div>
+</div>
+`;
+
+exports[`can render should keep animating while measuring new frames 1`] = `
+<div
+  data-frame-id="1"
+  data-stage="STALE"
+  id="wrapper"
+  style={Object {}}
+>
+  <div
+    data-frame-id="1"
+    data-key={1}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    1
+  </div>
+  <div
+    data-frame-id="1"
+    data-key={2}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    2
+  </div>
+  <div
+    data-frame-id="1"
+    data-key={3}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    3
+  </div>
+</div>
+`;
+
+exports[`can render should keep animating while measuring new frames 2`] = `
+<div
+  data-frame-id="1"
+  data-stage="STALE"
+  id="wrapper"
+  style={Object {}}
+>
+  <div
+    data-frame-id="1"
+    data-key={1}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    1
+  </div>
+  <div
+    data-frame-id="1"
+    data-key={2}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    2
+  </div>
+  <div
+    data-frame-id="1"
+    data-key={3}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    3
+  </div>
+</div>
+`;
+
+exports[`can render should keep animating while measuring new frames 3`] = `
+<div
+  data-frame-id="4"
+  data-stage="STALE"
+  id="wrapper"
+  style={Object {}}
+>
+  <div
+    data-frame-id="4"
+    data-key={1}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    1
+  </div>
+  <div
+    data-frame-id="4"
+    data-key={3}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    3
+  </div>
+  <div
+    data-frame-id="4"
+    data-key={2}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    2
+  </div>
+</div>
+`;

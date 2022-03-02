@@ -1,5 +1,5 @@
 import React from 'react';
-import { ReactMixitup, StateType } from '../../src/react-mixitup';
+import { ReactMixitup, StageType } from '../../src/react-mixitup';
 import { shuffle } from 'lodash';
 
 const ANIMATION_DURATION = 250;
@@ -15,11 +15,11 @@ export const Horizontal = () => {
         padding: 16
       }}
     >
-      <p>
+      <div>
         <p>
           <strong>dynamicDirection = 'horizontal'</strong>
         </p>
-      </p>
+      </div>
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <button
           onClick={() => setKeys(keys[0] === 1 ? [3, 2, 1, 4, 5] : [1, 2, 3])}
