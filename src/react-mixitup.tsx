@@ -385,6 +385,8 @@ export const ReactMixitup = React.memo(
               type: StageType.STALE,
               frame: lastFrame
             };
+            // stale should always only have 1 frame
+            refs.current.frames = [lastFrame];
             update();
           } else {
             cb();

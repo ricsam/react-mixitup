@@ -57,7 +57,7 @@ export const DebugMeasure = () => {
                     alignItems: 'center',
                     background: stage === StageType.MEASURE ? 'rgba(0, 0, 0, 0.12)' : 'transparent',
                     top: stage === StageType.MEASURE ? -24 : 0,
-                    left: 0,
+                    left: stage === StageType.MEASURE ? (cells.length === 5 ? 30 : 0) : 0,
                     ...style
                     // position: 'static',
                   }}
@@ -72,6 +72,7 @@ export const DebugMeasure = () => {
             // the transitionDuration should match the transition on renderCell / renderWrapper
             transitionDuration={ANIMATION_DURATION}
             debugMeasure={1000}
+            reMeasureAllPreviousFramesOnNewKeys
           />
           <span style={{ paddingLeft: 4 }}>Moved horizontally</span>
         </div>
