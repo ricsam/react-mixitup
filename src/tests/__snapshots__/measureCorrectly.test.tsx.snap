@@ -156,6 +156,630 @@ exports[`can render should cycle through stages 3`] = `
 </div>
 `;
 
+exports[`can render should decrease height when adding new items 1`] = `
+<div
+  data-frame-id="1"
+  data-stage="STALE"
+  id="wrapper"
+  style={Object {}}
+>
+  <div
+    data-frame-id="1"
+    data-key={1}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    1
+  </div>
+  <div
+    data-frame-id="1"
+    data-key={2}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    2
+  </div>
+  <div
+    data-frame-id="1"
+    data-key={3}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    3
+  </div>
+</div>
+`;
+
+exports[`can render should decrease height when adding new items 2`] = `
+<div
+  data-frame-id="1"
+  data-stage="STALE"
+  id="wrapper"
+  style={Object {}}
+>
+  <div
+    data-frame-id="1"
+    data-key={1}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    1
+  </div>
+  <div
+    data-frame-id="1"
+    data-key={2}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    2
+  </div>
+  <div
+    data-frame-id="1"
+    data-key={3}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    3
+  </div>
+</div>
+`;
+
+exports[`can render should decrease height when adding new items 3`] = `
+<div
+  data-frame-id="2"
+  data-stage="STALE"
+  id="wrapper"
+  style={Object {}}
+>
+  <div
+    data-frame-id="2"
+    data-key={3}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    3
+  </div>
+  <div
+    data-frame-id="2"
+    data-key={2}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    2
+  </div>
+</div>
+`;
+
+exports[`can render should decrease width when adding new items 1`] = `
+<div
+  data-frame-id="1"
+  data-stage="STALE"
+  id="wrapper"
+  style={Object {}}
+>
+  <div
+    data-frame-id="1"
+    data-key={1}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    1
+  </div>
+  <div
+    data-frame-id="1"
+    data-key={2}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    2
+  </div>
+  <div
+    data-frame-id="1"
+    data-key={3}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    3
+  </div>
+</div>
+`;
+
+exports[`can render should decrease width when adding new items 2`] = `
+<div
+  data-frame-id="1"
+  data-stage="STALE"
+  id="wrapper"
+  style={Object {}}
+>
+  <div
+    data-frame-id="1"
+    data-key={1}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    1
+  </div>
+  <div
+    data-frame-id="1"
+    data-key={2}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    2
+  </div>
+  <div
+    data-frame-id="1"
+    data-key={3}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    3
+  </div>
+</div>
+`;
+
+exports[`can render should decrease width when adding new items 3`] = `
+<div
+  data-frame-id="2"
+  data-stage="STALE"
+  id="wrapper"
+  style={Object {}}
+>
+  <div
+    data-frame-id="2"
+    data-key={3}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    3
+  </div>
+  <div
+    data-frame-id="2"
+    data-key={2}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    2
+  </div>
+</div>
+`;
+
+exports[`can render should increase height when adding new items 1`] = `
+<div
+  data-frame-id="1"
+  data-stage="STALE"
+  id="wrapper"
+  style={Object {}}
+>
+  <div
+    data-frame-id="1"
+    data-key={1}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    1
+  </div>
+  <div
+    data-frame-id="1"
+    data-key={2}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    2
+  </div>
+  <div
+    data-frame-id="1"
+    data-key={3}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    3
+  </div>
+</div>
+`;
+
+exports[`can render should increase height when adding new items 2`] = `
+<div
+  data-frame-id="1"
+  data-stage="STALE"
+  id="wrapper"
+  style={Object {}}
+>
+  <div
+    data-frame-id="1"
+    data-key={1}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    1
+  </div>
+  <div
+    data-frame-id="1"
+    data-key={2}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    2
+  </div>
+  <div
+    data-frame-id="1"
+    data-key={3}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    3
+  </div>
+</div>
+`;
+
+exports[`can render should increase height when adding new items 3`] = `
+<div
+  data-frame-id="2"
+  data-stage="STALE"
+  id="wrapper"
+  style={Object {}}
+>
+  <div
+    data-frame-id="2"
+    data-key={3}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    3
+  </div>
+  <div
+    data-frame-id="2"
+    data-key={2}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    2
+  </div>
+  <div
+    data-frame-id="2"
+    data-key={1}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    1
+  </div>
+  <div
+    data-frame-id="2"
+    data-key={4}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    4
+  </div>
+</div>
+`;
+
+exports[`can render should increase width when adding new items 1`] = `
+<div
+  data-frame-id="1"
+  data-stage="STALE"
+  id="wrapper"
+  style={Object {}}
+>
+  <div
+    data-frame-id="1"
+    data-key={1}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    1
+  </div>
+  <div
+    data-frame-id="1"
+    data-key={2}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    2
+  </div>
+  <div
+    data-frame-id="1"
+    data-key={3}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    3
+  </div>
+</div>
+`;
+
+exports[`can render should increase width when adding new items 2`] = `
+<div
+  data-frame-id="1"
+  data-stage="STALE"
+  id="wrapper"
+  style={Object {}}
+>
+  <div
+    data-frame-id="1"
+    data-key={1}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    1
+  </div>
+  <div
+    data-frame-id="1"
+    data-key={2}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    2
+  </div>
+  <div
+    data-frame-id="1"
+    data-key={3}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    3
+  </div>
+</div>
+`;
+
+exports[`can render should increase width when adding new items 3`] = `
+<div
+  data-frame-id="2"
+  data-stage="STALE"
+  id="wrapper"
+  style={Object {}}
+>
+  <div
+    data-frame-id="2"
+    data-key={3}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    3
+  </div>
+  <div
+    data-frame-id="2"
+    data-key={2}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    2
+  </div>
+  <div
+    data-frame-id="2"
+    data-key={1}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    1
+  </div>
+  <div
+    data-frame-id="2"
+    data-key={4}
+    data-stage="STALE"
+    id="cell"
+    style={
+      Object {
+        "transform": "none",
+        "transition": "0s 0s all ease",
+      }
+    }
+  >
+    4
+  </div>
+</div>
+`;
+
 exports[`can render should keep animating while measuring new frames 1`] = `
 <div
   data-frame-id="1"
