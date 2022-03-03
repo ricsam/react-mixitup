@@ -808,12 +808,15 @@ export const ReactMixitup = React.memo(
         const lastFrame = refs.current.frames[len - 1];
         let measureFrames = refs.current.frames;
         if (!props.reMeasureAllPreviousFramesOnNewKeys) {
-          measureFrames = [
-            ...refs.current.frames.filter(
-              (frame, index) => !frame.hasBeenMeasured && index < len - 1
-            ),
-            lastFrame
-          ];
+          measureFrames = [];
+          refs.current.frames.forEach((frame, index) => {
+            if (!frame.hasBeenMeasured) {
+              measureFrames.push(frame);
+            } else if (index >= len - 2) {
+              // push the last 2 frames
+              measureFrames.push(frame);
+            }
+          });
         }
         return (
           <MixitupFragment key={DOMLevel.ROOT} level={DOMLevel.ROOT}>

@@ -522,8 +522,8 @@ const runMultipleAnimations = (options: Options) => {
       _root.update(<Example keys={keys['3']} options={options} />);
     });
     root = _root.toJSON() as Root;
-    // if reMeasureAllPreviousFramesOnNewKeys then all previous frames are measured, else just the latest
-    expectAnimateWhileMeasure(options.reMeasureAllPreviousFramesOnNewKeys ? [1, 2, 3] : [3]);
+    // if reMeasureAllPreviousFramesOnNewKeys then all previous frames are measured, else just the latest 2
+    expectAnimateWhileMeasure(options.reMeasureAllPreviousFramesOnNewKeys ? [1, 2, 3] : [2, 3]);
     expect(setTimeout).toHaveBeenCalledTimes(6);
     expect(setTimeout).toHaveBeenNthCalledWith(
       6,
@@ -536,7 +536,7 @@ const runMultipleAnimations = (options: Options) => {
       _root.update(<Example keys={keys['4']} options={options} />);
     });
     root = _root.toJSON() as Root;
-    expectAnimateWhileMeasure(options.reMeasureAllPreviousFramesOnNewKeys ? [1, 2, 3, 4] : [4]);
+    expectAnimateWhileMeasure(options.reMeasureAllPreviousFramesOnNewKeys ? [1, 2, 3, 4] : [3, 4]);
     expect(setTimeout).toHaveBeenCalledTimes(7);
     expect(setTimeout).toHaveBeenNthCalledWith(
       7,
@@ -770,8 +770,10 @@ const registerDebugMeasureTest = (title: string, keys: KeysStore) => {
       expect(setTimeout).toHaveBeenCalledTimes(2);
       expect(setTimeout).toHaveBeenNthCalledWith(2, expect.any(Function), options.debugMeasure);
 
-      expectMeasureStage(root[0], keys, '3', options);
-      expectStaleStage(root[1], keys, '1');
+      // two latest frames are measured
+      expectMeasureStage(root[0], keys, '2', options);
+      expectMeasureStage(root[1], keys, '3', options);
+      expectStaleStage(root[2], keys, '1');
 
       // move to frame 4, while debug measure is open
       act(() => {
@@ -782,8 +784,10 @@ const registerDebugMeasureTest = (title: string, keys: KeysStore) => {
       expect(setTimeout).toHaveBeenCalledTimes(3);
       expect(setTimeout).toHaveBeenNthCalledWith(3, expect.any(Function), options.debugMeasure);
 
-      expectMeasureStage(root[0], keys, '4', options);
-      expectStaleStage(root[1], keys, '1');
+      // two last frames are measured
+      expectMeasureStage(root[0], keys, '3', options);
+      expectMeasureStage(root[1], keys, '4', options);
+      expectStaleStage(root[2], keys, '1');
 
       // will now move to commit, but should move to stale if keys[1] === keys[4]
       act(() => {

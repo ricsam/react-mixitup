@@ -199,13 +199,21 @@ Example:
 
 
 **reMeasureAllPreviousFramesOnNewKeys** - [optional]
-If falsy only unmeasured frames and the previous frame will be rendered.
+
+If falsy only unmeasured frames and the previous 2 frames will be rendered.
 When true all previous frames are rendered and measured each time the keys props is updated.
 
 This has impact if the parent container resizes while multiple animations are dispatched.
 
 If the parent container resizes each cell must be re-measured. This has a performance impact.
 
-Thus by default only the previous frame is measured ? (or maybe the rendered frame should be rendered)
+Thus by default only the previous 2 frames are measured.
+
+```tsx
+reMeasureAllPreviousFramesOnNewKeys?: boolean;
+```
+
+
+
 
 
