@@ -290,6 +290,8 @@ const defaultRenderWrapper: RenderWrapper = (style, ref, cells) => {
   );
 };
 
+export const TEST_COMPONENT_UPDATE_DELAY = 100;
+
 type Stage =
   | {
       type: StageType.MEASURE;
@@ -359,9 +361,12 @@ export const ReactMixitup = React.memo(
 
       const [, _update] = React.useState(0);
       const update = () => {
-        setTimeout(() => {
-          _update(i => i + 1);
-        }, 1);
+        setTimeout(
+          () => {
+            _update(i => i + 1);
+          },
+          process.env.NODE_ENV === 'test' ? TEST_COMPONENT_UPDATE_DELAY : 1
+        );
       };
 
       React.useEffect(() => {
@@ -391,9 +396,15 @@ export const ReactMixitup = React.memo(
             refs.current.stage = {
               type: StageType.ANIMATE
             };
-            window.requestAnimationFrame(() => {
-              update();
-            });
+            if (process.env.NODE_ENV === 'test') {
+              setTimeout(() => {
+                update();
+              }, TEST_COMPONENT_UPDATE_DELAY);
+            } else {
+              window.requestAnimationFrame(() => {
+                update();
+              });
+            }
           });
         };
         const goToCommit = (whileAnimating: boolean) => {
@@ -711,7 +722,7 @@ export const ReactMixitup = React.memo(
         const styles: IWrapperStyle = {};
         if (dynamicDirection === 'horizontal') {
           styles.width = width;
-        } else {
+        } else if (dynamicDirection === 'vertical') {
           styles.height = height;
         }
         const keys = getAllUniqueKeysForFrames(frames);
@@ -760,7 +771,7 @@ export const ReactMixitup = React.memo(
         const styles: IWrapperStyle = {};
         if (dynamicDirection === 'horizontal') {
           styles.width = width;
-        } else {
+        } else if (dynamicDirection === 'vertical') {
           styles.height = height;
         }
         const keys = getAllUniqueKeysForFrames(refs.current.frames);
