@@ -15,7 +15,7 @@
   "files": [
     "dist"
   ],
-  "author": "Richard Samuelsson <ricsam@kth.se>",
+  "author": "Richie<ricsam@users.noreply.github.com>",
   "repository": {
     "type": "git",
     "url": "https://github.com/ricsam/react-mixitup.git"
@@ -25,15 +25,12 @@
     "node": ">=6.0.0"
   },
   "scripts": {
-    "build:docs": "typedoc --out docs/api --target es6 --theme minimal --mode file src",
-    "build": "yarn run compile && yarn run build:docs && yarn run docz:build",
-    "build:site": "yarn run build:docs && yarn run docz:build",
+    "build": "yarn run compile",
+    "build:site": "yarn run build:docs",
     "commit": "git-cz",
     "compile": "tsc --module commonjs && rollup -c rollup.config.ts",
     "deploy-docs": "ts-node tools/gh-pages-publish",
-    "docz:build": "docz build --typescript",
-    "docz:dev": "docz dev --typescript",
-    "lint": "tslint  --project tsconfig.json -t codeFrame 'src/**/*.ts' 'test/**/*.ts'",
+    "lint": "tslint --project tsconfig.json -t codeFrame 'src/**/*.ts' 'test/**/*.ts'",
     "prebuild": "rimraf dist",
     "precommit": "lint-staged",
     "report-coverage": "cat ./coverage/lcov.info | coveralls",
@@ -44,6 +41,9 @@
     "test:prod": "npm run lint && npm run test -- --no-cache",
     "test:watch": "react-scripts test --env=jsdom",
     "test": "react-scripts test --env=jsdom"
+  },
+  "resolutions": {
+    "@types/eslint": "8.4.1"
   },
   "lint-staged": {
     "{src,test}/**/*.{ts,tsx}": [
@@ -79,8 +79,6 @@
     ]
   },
   "devDependencies": {
-    "@commitlint/cli": "^7.1.2",
-    "@commitlint/config-conventional": "^7.1.2",
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^12.0.0",
     "@testing-library/user-event": "^13.2.1",
@@ -90,46 +88,22 @@
     "@types/react": "^17.0.20",
     "@types/react-dom": "^17.0.9",
     "@types/react-test-renderer": "^17.0.1",
-    "@types/styled-components": "^5.1.23",
-    "colors": "^1.3.2",
-    "commitizen": "^3.0.0",
-    "coveralls": "^3.0.2",
-    "cross-env": "^5.2.0",
-    "cz-conventional-changelog": "^2.1.0",
-    "docz": "^2.4.0",
-    "docz-theme-default": "^1.2.0",
-    "husky": "^1.0.1",
-    "lint-staged": "^8.0.0",
-    "lodash": "^4.17.21",
-    "lodash.camelcase": "^4.3.0",
     "prettier": "^1.14.3",
-    "prompt": "^1.0.0",
     "react": "17.0.2",
     "react-dom": "17.0.2",
     "react-scripts": "5.0.0",
     "react-test-renderer": "^17.0.2",
-    "replace-in-file": "^3.4.2",
-    "rimraf": "^2.6.2",
-    "rollup": "^0.67.0",
-    "rollup-plugin-commonjs": "^9.1.8",
-    "rollup-plugin-json": "^3.1.0",
-    "rollup-plugin-node-resolve": "^3.4.0",
-    "rollup-plugin-peer-deps-external": "^2.2.0",
-    "rollup-plugin-sourcemaps": "^0.4.2",
-    "rollup-plugin-typescript2": "^0.18.0",
-    "semantic-release": "^15.13.3",
-    "shelljs": "^0.8.3",
-    "styled-components": "^5.3.3",
-    "ts-node": "^7.0.1",
-    "tslint": "^5.11.0",
-    "tslint-config-prettier": "^1.15.0",
-    "tslint-config-standard": "^8.0.1",
-    "tslint-react": "^4.0.0",
-    "typedoc": "^0.12.0",
-    "typescript": "^4.4.2",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-json": "^4.0.0",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-peer-deps-external": "^2.2.4",
+    "rollup-plugin-sourcemaps": "^0.6.3",
+    "rollup-plugin-typescript2": "^0.31.2",
+    "typedoc": "^0.22.12",
+    "typescript": "~4.4.2",
     "web-vitals": "^2.1.0"
   },
   "peerDependencies": {
-    "react": ">=16"
+    "react": ">=16.8"
   }
 }

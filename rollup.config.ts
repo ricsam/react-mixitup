@@ -1,4 +1,4 @@
-import camelCase from 'lodash.camelcase'
+import { camelCase } from 'lodash'
 import commonjs from 'rollup-plugin-commonjs'
 import external from 'rollup-plugin-peer-deps-external'
 import json from 'rollup-plugin-json'
