@@ -27,7 +27,7 @@ export const DebugMeasure = () => {
         >
           Mixitup
         </button>
-        <div style={{ position: 'relative' }}>
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
           <ReactMixitup
             // unique list of keys to identify each cell.
             keys={keys}
@@ -53,11 +53,11 @@ export const DebugMeasure = () => {
                     transition: `width ${ANIMATION_DURATION}ms ease`,
                     borderRight: '1px solid black',
                     paddingRight: '4px',
-                    height: '24px',
+                    height: '20px',
                     alignItems: 'center',
                     background: stage === StageType.MEASURE ? 'rgba(0, 0, 0, 0.12)' : 'transparent',
-                    top: stage === StageType.MEASURE ? -24 : 0,
-                    left: stage === StageType.MEASURE ? (cells.length === 5 ? 30 : 0) : 0,
+                    top: stage === StageType.MEASURE ? -24 : 'auto',
+                    left: stage === StageType.MEASURE ? (cells.length === 5 ? 30 : 0) : 'auto',
                     ...style
                     // position: 'static',
                   }}

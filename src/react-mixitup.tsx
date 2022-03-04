@@ -129,12 +129,10 @@ export interface IFrame {
    * A unique index used for debugging purposes to differentiate each IFrame
    */
   index: number;
-
   /**
    * If the frame has been measured
    */
   hasBeenMeasured: boolean;
-
   /**
    * a hash generated from the keys
    */
@@ -144,18 +142,26 @@ export interface IFrame {
 /**
  * ICellStyle
  *
- * The styles passed to a cell
+ * The styles passed to a renderCell
  */
 export interface ICellStyle {
-  transform?: string;
+  position?: 'absolute';
+  top?: string;
+  left?: string;
+  margin?: '0px';
   transition?: string;
+  transform?: string;
 }
 
+/**
+ * IWrapperStyle
+ *
+ * The styles passed to the renderWrapper
+ */
 export interface IWrapperStyle {
-  /**
-   * used when rendering a measure stage
-   */
-  position?: 'absolute';
+  // position absolute in MEASURE stage and position relative in ANIMATE and COMMIT stage
+  // undefined in STALE stage
+  position?: 'absolute' | 'relative';
   width?: number;
   height?: number;
   visibility?: 'hidden';
@@ -189,7 +195,8 @@ interface IProps {
     style: ICellStyle,
     ref: React.Ref<any>,
     stage: StageType,
-    frame: IFrame
+    frame: IFrame,
+    activeFrame: boolean
   ) => React.ReactNode | JSX.Element;
 
   /**
@@ -207,7 +214,8 @@ interface IProps {
     ref: React.Ref<any>,
     cells: JSX.Element[],
     stage: StageType,
-    frame: IFrame
+    frame: IFrame,
+    activeFrame: boolean
   ) => React.ReactNode | JSX.Element;
 
   /**
@@ -362,10 +370,21 @@ export const ReactMixitup = React.memo(
       }
 
       const [, _update] = React.useState(0);
+
+      const hasUnmounted = React.useRef(false);
+      React.useEffect(
+        () => () => {
+          hasUnmounted.current = true;
+        },
+        []
+      );
+
       const update = () => {
         setTimeout(
           () => {
-            _update(i => i + 1);
+            if (!hasUnmounted.current) {
+              _update(i => i + 1);
+            }
           },
           process.env.NODE_ENV === 'test' ? TEST_COMPONENT_UPDATE_DELAY : 1
         );
@@ -496,12 +515,14 @@ export const ReactMixitup = React.memo(
         ref,
         style,
         keys,
-        stageType
+        stageType,
+        activeFrame
       }: {
         keys: { key: string | number; frame: IFrame }[];
         ref: (key: string | number, el: HTMLElement) => void;
         style: (key: string | number) => ICellStyle;
         stageType: StageType;
+        activeFrame: boolean;
       }) => {
         const makeRef = (key: string | number) => {
           return (el: HTMLElement | null) => {
@@ -514,7 +535,7 @@ export const ReactMixitup = React.memo(
         const cells = keys.map(({ key, frame }) => {
           return (
             <React.Fragment key={key}>
-              {renderCell(key, style(key), makeRef(key), stageType, frame)}
+              {renderCell(key, style(key), makeRef(key), stageType, frame, activeFrame)}
             </React.Fragment>
           );
         });
@@ -522,7 +543,7 @@ export const ReactMixitup = React.memo(
         return cells;
       };
 
-      const measureFrame = (frame: IFrame) => (
+      const measureFrame = (frame: IFrame, activeFrame: boolean) => (
         <NotifyAboutRendered frame={frame}>
           {renderWrapper(
             props.debugMeasure
@@ -543,10 +564,12 @@ export const ReactMixitup = React.memo(
               },
               keys: frame.keys.map(key => ({ key, frame })),
               style: staleStyle,
-              stageType: StageType.MEASURE
+              stageType: StageType.MEASURE,
+              activeFrame
             }),
             StageType.MEASURE,
-            frame
+            frame,
+            activeFrame
           )}
         </NotifyAboutRendered>
       );
@@ -606,10 +629,12 @@ export const ReactMixitup = React.memo(
               ref: () => {},
               keys: frame.keys.map(key => ({ key, frame })),
               style: staleStyle,
-              stageType: StageType.STALE
+              stageType: StageType.STALE,
+              activeFrame: true
             }),
             StageType.STALE,
-            frame
+            frame,
+            true
           )}
         </MixitupFragment>
       );
@@ -651,47 +676,52 @@ export const ReactMixitup = React.memo(
         frames: IFrame[]
       ): ICellStyle => {
         let z = 1;
-        let x = 0;
-        let y = 0;
-        let x0 = 0;
-        let y0 = 0;
 
         const indexes = getKeyFrameParticipation(frames, key);
         if (indexes.length === 0) {
           throw new Error('something went wrong in the lib');
         }
 
-        ({ x, y } = frames[indexes[0]].positions[key]);
-        ({ x: x0, y: y0 } = frames[indexes[indexes.length - 1]].positions[key]);
+        const { x: xTarget, y: yTarget } = frames[indexes[0]].positions[key];
+        const { x: xSource, y: ySource } = frames[indexes[indexes.length - 1]].positions[key];
+
+        const style: ICellStyle = {
+          position: 'absolute',
+          top: '0px',
+          left: '0px',
+          margin: '0px'
+        };
 
         /* will be added */
-        if (indexes.length === 1) {
-          if (type === StageType.ANIMATE) {
-            z = 1;
-          } else {
-            // scale from 0 -> 1 when going from COMMIT -> ANIMATE
-            z = 0;
-          }
+        // Last frame has the key.
+        // The key has not been added before.
+        // Type is commit
+        if (
+          frames[frames.length - 1].keys.includes(key) &&
+          indexes.length === 1 &&
+          type === StageType.COMMIT
+        ) {
+          // scale from 0 -> 1 when going from COMMIT -> ANIMATE
+          z = 0;
         }
 
         /* will be removed */
         if (!frames[frames.length - 1].keys.includes(key)) {
-          if (type === StageType.ANIMATE) {
-            z = 0;
-          } else {
-            // scale from 1 -> 0 when going from COMMIT -> ANIMATE
-            z = 1;
-          }
+          // simply remove
+          z = 0;
         }
 
-        const xDiff = x - x0;
-        const yDiff = y - y0;
+        const xDiff = xTarget - xSource;
+        const yDiff = yTarget - ySource;
 
-        const transform = `translate3d(${[xDiff, yDiff, 0].join('px,')}px) scale(${z})`;
+        style.left = xSource + 'px';
+        style.top = ySource + 'px';
 
-        const style: ICellStyle = {
-          transform
-        };
+        if (type === StageType.COMMIT) {
+          style.transform = `translate3d(${[0, 0, 0].join('px,')}px) scale(${z})`;
+        } else {
+          style.transform = `translate3d(${[xDiff, yDiff, 0].join('px,')}px) scale(${z})`;
+        }
         return style;
       };
 
@@ -723,7 +753,9 @@ export const ReactMixitup = React.memo(
         const lastFrame = frames[frames.length - 1];
         const height = lastFrame.containerHeight!;
         const width = lastFrame.containerWidth!;
-        const styles: IWrapperStyle = {};
+        const styles: IWrapperStyle = {
+          position: 'relative'
+        };
         if (dynamicDirection === 'horizontal') {
           styles.width = width;
         } else if (dynamicDirection === 'vertical') {
@@ -743,10 +775,12 @@ export const ReactMixitup = React.memo(
                 style: key => {
                   return animatedCellStyle(StageType.ANIMATE, key, frames);
                 },
-                stageType: StageType.ANIMATE
+                stageType: StageType.ANIMATE,
+                activeFrame: true
               }),
               StageType.ANIMATE,
-              lastFrame
+              lastFrame,
+              true
             )}
           </MixitupFragment>
         );
@@ -772,7 +806,9 @@ export const ReactMixitup = React.memo(
         }
         const height = sizeFrame.containerHeight!;
         const width = sizeFrame.containerWidth!;
-        const styles: IWrapperStyle = {};
+        const styles: IWrapperStyle = {
+          position: 'relative'
+        };
         if (dynamicDirection === 'horizontal') {
           styles.width = width;
         } else if (dynamicDirection === 'vertical') {
@@ -795,10 +831,12 @@ export const ReactMixitup = React.memo(
                     style: key => {
                       return animatedCellStyle(StageType.COMMIT, key, refs.current.frames);
                     },
-                    stageType: StageType.COMMIT
+                    stageType: StageType.COMMIT,
+                    activeFrame: true
                   }),
                   StageType.COMMIT,
-                  sizeFrame
+                  sizeFrame,
+                  true
                 )}
               </MixitupFragment>
             </MixitupFragment>
@@ -825,8 +863,12 @@ export const ReactMixitup = React.memo(
         return (
           <MixitupFragment key={DOMLevel.ROOT} level={DOMLevel.ROOT}>
             <MixitupFragment key={DOMLevel.HIDDEN} level={DOMLevel.HIDDEN}>
-              {measureFrames.map(frame => {
-                return <React.Fragment key={frame.index}>{measureFrame(frame)}</React.Fragment>;
+              {measureFrames.map((frame, index) => {
+                return (
+                  <React.Fragment key={frame.index}>
+                    {measureFrame(frame, index === measureFrames.length - 1)}
+                  </React.Fragment>
+                );
               })}
             </MixitupFragment>
             <MixitupFragment key={DOMLevel.VISIBLE} level={DOMLevel.VISIBLE}>

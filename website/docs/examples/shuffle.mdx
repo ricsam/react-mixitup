@@ -2,7 +2,7 @@
 
 ```tsx live
 function Shuffle() {
-  const NUM_CELLS = 5;
+  const NUM_CELLS = 9;
   const [keys, setKeys] = React.useState(() => range(NUM_CELLS));
 
   const _shuffle = () => {
@@ -24,14 +24,15 @@ function Shuffle() {
             key={key}
             ref={ref}
             style={{
-              width: '48px',
-              height: '48px',
+              width: 48,
+              height: 48,
               border: '1px solid black',
-              margin: '4px',
+              margin: 4,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              // transition-duration must be same as transitionDuration prop
+              // transition-duration must be
+              // same as transitionDuration prop
               transition: `transform ${TRANSITION_DURATION}ms ease`,
               ...style
             }}
@@ -40,14 +41,20 @@ function Shuffle() {
           </div>
         )}
         renderWrapper={(style, ref, children) => {
+          const squareWidth = (48 + 4 * 2);
+          const wrapperWidth = squareWidth *
+            Math.ceil(Math.sqrt(NUM_CELLS));
           return (
             <div
               style={{
                 display: 'flex',
                 flexWrap: 'wrap',
-                boxSizing: 'border-box',
-                width: 48 * 3,
-                padding: '12px',
+                // if wrapper height or width never changes
+                // we can have set boxSizing to anything
+                boxSizing: 'content-box',
+                width: wrapperWidth,
+                height: wrapperWidth,
+                padding: '12px 0',
                 ...style
               }}
               ref={ref}

@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { shuffle, range, uniq } from 'lodash';
 import { ReactMixitup } from '../../../src/react-mixitup';
 import { useEffect } from 'react';
+import Link from '@docusaurus/Link';
 
 // const getItems = () =>
 //   uniq(
@@ -50,6 +51,10 @@ export const Shuffle = () => {
         <button type="button" className="button button--primary" onClick={shuffleItems}>
           Shuffle
         </button>
+        <div style={{width: 16}}></div>
+        <Link to="/docs/intro" type="button" className="button button--secondary" onClick={shuffleItems}>
+          Get started
+        </Link>
       </div>
       <ReactMixitup
         keys={items}

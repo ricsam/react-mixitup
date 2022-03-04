@@ -226,9 +226,12 @@ const expectAnimationCellStyles = (
 
   // width should be set during commit
   if (options.dynamicDirection === 'off') {
-    expect(root.props.style).toEqual({});
+    expect(root.props.style).toEqual({
+      position: 'relative'
+    });
   } else {
     expect(root.props.style).toEqual({
+      position: 'relative',
       [options.dynamicDirection === 'horizontal' ? 'width' : 'height']: keysStore[
         Number(frameIndex) - (stage === StageType.COMMIT ? 1 : 0)
       ].length
@@ -253,29 +256,32 @@ const expectAnimationCellStyles = (
 
     let diff =
       includedFrames[includedFrames.length - 1].indexOf(key) - includedFrames[0].indexOf(key);
+
     let scale = 1;
 
-    if (includedFrames.length === 1) {
-      // appearing for first time
-      if (stage === StageType.ANIMATE) {
-        scale = 1;
-      } else {
-        // scale from 0 -> 1 when going from COMMIT -> ANIMATE
-        scale = 0;
-      }
+    /* will be added */
+    // Last frame has the key.
+    // The key has not been added before.
+    // Type is commit
+    if (
+      keysStore[frameIndex].includes(key) &&
+      includedFrames.length === 1 &&
+      stage === StageType.COMMIT
+    ) {
+      scale = 0;
     }
 
+    /* will be removed */
     if (!keysStore[frameIndex].includes(key)) {
-      if (stage === StageType.ANIMATE) {
-        scale = 0;
-      } else {
-        // scale from 1 -> 0 when going from COMMIT -> ANIMATE
-        scale = 1;
-      }
+      scale = 0;
     }
 
     expect(child.props.style).toEqual({
-      transform: `translate3d(${diff}px,0px,0px) scale(${scale})`
+      transform: `translate3d(${stage === StageType.ANIMATE ? diff : 0}px,0px,0px) scale(${scale})`,
+      left: includedFrames[0].indexOf(key) + 'px',
+      margin: '0px',
+      position: 'absolute',
+      top: '0px'
     });
   });
 };

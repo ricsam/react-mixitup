@@ -1,7 +1,6 @@
 import React from 'react';
 import { ReactMixitup, StageType } from '../../src/react-mixitup';
 import { shuffle } from 'lodash';
-
 const ANIMATION_DURATION = 250;
 
 export const Horizontal = () => {
@@ -52,6 +51,8 @@ export const Horizontal = () => {
                   transition: `width ${ANIMATION_DURATION}ms ease`,
                   borderRight: '1px solid black',
                   paddingRight: '4px',
+                  height: '20px',
+                  alignItems: 'center',
                   ...style
                 }}
                 ref={ref}
@@ -104,6 +105,7 @@ export const Vertical = () => {
                 style={{
                   transition: `transform ${ANIMATION_DURATION}ms linear`,
                   textAlign: 'center',
+                  width: '100%',
                   ...style
                 }}
               >
@@ -141,6 +143,13 @@ export const Vertical = () => {
 
 export const Off = () => {
   const [keys, setKeys] = React.useState([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+  const ANIMATION_DURATION = 1500;
+
+  // React.useEffect(() => {
+  //   setInterval(() => {
+  //     setKeys(keys => shuffle(keys.length === 9 ? [1, 2, 3, 4] : [1, 2, 3, 4, 5, 6, 7, 8, 9]));
+  //   }, 250);
+  // }, []);
 
   return (
     <div
@@ -174,10 +183,11 @@ export const Off = () => {
             Variable size ⚠️
           </button>
           <div style={{ padding: '0 8px' }}>
-            <div>Variable size looks weird sometimes</div>
+            <div>Variable size looks weird as new items</div>
+            <div>fly in and the height isn't animated</div>
             <div>due to dynamicDirection = 'off'</div>
-            <div>But just a shuffle looks okay,</div>
-            <div>since no elements are removed or added</div>
+            <div>Shuffle looks okay, since no</div>
+            <div>elements are removed or added</div>
           </div>
         </div>
         <div
@@ -218,8 +228,9 @@ export const Off = () => {
                     display: 'flex',
                     flexWrap: 'wrap',
                     border: '1px solid black',
-                    width: '92px',
+                    width: 92,
                     boxSizing: 'border-box',
+                    height: Math.ceil(cells.length / 3) * 30 + 2,
                     ...style
                   }}
                   ref={ref}
