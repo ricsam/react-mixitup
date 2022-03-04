@@ -1,0 +1,62 @@
+# Random
+
+```tsx live
+function Random() {
+  const [keys, setKeys] = React.useState(() => range(5));
+
+  const _random = () => {
+    setKeys(shuffle(range(random(1, 10))));
+  };
+
+  const TRANSITION_DURATION = 250;
+
+  return (
+    <div style={{position: 'relative', height: 480}}>
+      <button onClick={_random}>Random</button>
+      <ReactMixitup
+        keys={keys}
+        dynamicDirection="vertical"
+        transitionDuration={TRANSITION_DURATION}
+        renderCell={(key, style, ref) => (
+          <div
+            key={key}
+            ref={ref}
+            style={{
+              width: 48,
+              height: 48,
+              border: '1px solid black',
+              margin: 4,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: `transform ${TRANSITION_DURATION}ms ease`,
+              ...style
+            }}
+          >
+            {key}
+          </div>
+        )}
+        renderWrapper={(style, ref, children, stage, frame) => {
+          return (
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                boxSizing: 'border-box',
+                padding: 12,
+                width: 48 * 2 + 40,
+                transition: `height ${TRANSITION_DURATION}ms ease`,
+                left: stage === StageType.MEASURE ? 48 * 2 + 40 + (48 * 2 + 40) * (frame.index % 3) : 0,
+                ...style
+              }}
+              ref={ref}
+            >
+              {children}
+            </div>
+          );
+        }}
+      />
+    </div>
+  );
+}
+```

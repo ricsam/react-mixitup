@@ -39,29 +39,29 @@ const Example = ({ keys, options }: { keys: number[]; options: Options }) => {
           id="cell"
           data-stage={stage}
           data-key={key}
-          data-frame-id={frame.id}
+          data-frame-index={frame.index}
         >
           {key}
         </div>
       )}
       renderWrapper={(style, ref, cells, stage, frame) => (
-        <div ref={ref} style={style} id="wrapper" data-stage={stage} data-frame-id={frame.id}>
+        <div ref={ref} style={style} id="wrapper" data-stage={stage} data-frame-index={frame.index}>
           {cells}
         </div>
       )}
     />
   );
 };
-let mockGenName: jest.SpyInstance<IFrame, [(string | number)[]]>;
+let mockGenName: jest.SpyInstance<IFrame, [(string | number)[], number]>;
 
 beforeEach(() => {
   let i = 0;
   const origCreateFrame = utils.createFrame;
-  mockGenName = jest.spyOn(utils, 'createFrame').mockImplementation(keys => {
-    const orig = origCreateFrame(keys);
+  mockGenName = jest.spyOn(utils, 'createFrame').mockImplementation((keys, index) => {
+    const orig = origCreateFrame(keys, i);
     return {
       ...orig,
-      id: String(++i)
+      index: ++i
     };
   });
 });
@@ -76,7 +76,7 @@ type ElementProps =
       id: 'cell';
       'data-stage': StageType;
       'data-key': string;
-      'data-frame-id': string;
+      'data-frame-index': string;
     }
   | {
       style: IWrapperStyle;
@@ -92,30 +92,30 @@ type Root =
     }
   | Root[];
 
-type KeysStore = { [k: string]: number[] };
+type KeysStore = { [frameIndex: number]: number[] };
 
 const createRoot = (keys: KeysStore, options: Options) => {
   return create(<Example keys={keys['1']} options={options} />, {
     createNodeMock: element => {
       if (element.props.id === 'cell') {
-        const key = element.props['data-key'];
+        const key = Number(element.props['data-key']);
         const stage = element.props['data-stage'];
-        const frameId = element.props['data-frame-id'];
+        const frameIndex = element.props['data-frame-index'];
         return {
-          offsetLeft: keys[frameId].indexOf(key),
+          offsetLeft: keys[frameIndex].indexOf(key),
           offsetTop: 0
         };
       }
       if (element.props.id === 'wrapper') {
-        const frameId = element.props['data-frame-id'];
+        const frameIndex = element.props['data-frame-index'];
         if (options.dynamicDirection === 'horizontal') {
           return {
             offsetHeight: 1,
-            offsetWidth: keys[frameId].length
+            offsetWidth: keys[frameIndex].length
           };
         }
         return {
-          offsetHeight: keys[frameId].length,
+          offsetHeight: keys[frameIndex].length,
           offsetWidth: 1
         };
       }
@@ -139,14 +139,14 @@ const expectChildrenOrdering = (root: Root, children: string) => {
   ).toBe(children);
 };
 
-const expectStaleCellStyles = (root: Root, keys: KeysStore, frameId: string) => {
+const expectStaleCellStyles = (root: Root, keys: KeysStore, frameIndex: number) => {
   expect(
     // expect each transition to be off
     // expect transform to be off
     // expect stage to be stale
     getChildrenProps(root, ['style'])
   ).toEqual(
-    range(keys[frameId].length).map(() => ({ transition: '0s 0s all ease', transform: 'none' }))
+    range(keys[frameIndex].length).map(() => ({ transition: '0s 0s all ease', transform: 'none' }))
   );
 };
 
@@ -158,7 +158,7 @@ const expectStaleWrapperStyles = (root: Root) => {
   ).toEqual({});
 };
 
-const expectStaleStage = (root: Root, keys: KeysStore, frameId: string) => {
+const expectStaleStage = (root: Root, keys: KeysStore, frameIndex: number) => {
   assert(!Array.isArray(root));
 
   expect(root.props.id).toBe('wrapper');
@@ -167,8 +167,8 @@ const expectStaleStage = (root: Root, keys: KeysStore, frameId: string) => {
   expect(root.children[0].props).toEqual(
     expect.objectContaining({
       id: 'cell',
-      'data-frame-id': frameId,
-      'data-key': keys[frameId][0],
+      'data-frame-index': frameIndex,
+      'data-key': keys[frameIndex][0],
       'data-stage': 'STALE',
       style: {
         transform: 'none',
@@ -177,9 +177,9 @@ const expectStaleStage = (root: Root, keys: KeysStore, frameId: string) => {
     })
   );
 
-  expectChildrenOrdering(root, keys[frameId].join());
+  expectChildrenOrdering(root, keys[frameIndex].join());
 
-  expectStaleCellStyles(root, keys, frameId);
+  expectStaleCellStyles(root, keys, frameIndex);
   expectStaleWrapperStyles(root);
 
   // save snapshot as well
@@ -202,13 +202,13 @@ const expectMeasureWrapperStyles = (root: Root, options: Options) => {
   );
 };
 
-const expectMeasureStage = (root: Root, keys: KeysStore, frameId: string, options: Options) => {
+const expectMeasureStage = (root: Root, keys: KeysStore, frameIndex: number, options: Options) => {
   assert(!Array.isArray(root));
 
   expect(root.props['data-stage']).toBe(StageType.MEASURE);
 
   // measure should render each cell with stale styles
-  expectStaleCellStyles(root, keys, frameId);
+  expectStaleCellStyles(root, keys, frameIndex);
 
   // expect measure wrapper to be position absolute and hidden
   expectMeasureWrapperStyles(root, options);
@@ -217,7 +217,7 @@ const expectMeasureStage = (root: Root, keys: KeysStore, frameId: string, option
 const expectAnimationCellStyles = (
   root: Root,
   keysStore: KeysStore,
-  frameId: string,
+  frameIndex: number,
   stage: StageType.ANIMATE | StageType.COMMIT,
   options: Options
 ) => {
@@ -230,7 +230,7 @@ const expectAnimationCellStyles = (
   } else {
     expect(root.props.style).toEqual({
       [options.dynamicDirection === 'horizontal' ? 'width' : 'height']: keysStore[
-        Number(frameId) - (stage === StageType.COMMIT ? 1 : 0)
+        Number(frameIndex) - (stage === StageType.COMMIT ? 1 : 0)
       ].length
     });
   }
@@ -246,7 +246,7 @@ const expectAnimationCellStyles = (
       if (frames[i].includes(key)) {
         includedFrames.push(frames[i]);
       }
-      if (String(i + 1) === frameId) {
+      if (i + 1 === frameIndex) {
         break;
       }
     }
@@ -265,7 +265,7 @@ const expectAnimationCellStyles = (
       }
     }
 
-    if (!keysStore[frameId].includes(key)) {
+    if (!keysStore[frameIndex].includes(key)) {
       if (stage === StageType.ANIMATE) {
         scale = 0;
       } else {
@@ -280,20 +280,25 @@ const expectAnimationCellStyles = (
   });
 };
 
-const expectCommitStage = (root: Root, keys: KeysStore, frameId: string, options: Options) => {
+const expectCommitStage = (root: Root, keys: KeysStore, frameIndex: number, options: Options) => {
   // should only be one element now
   assert(!Array.isArray(root));
 
   expect(root.props['id']).toBe('wrapper');
   expect(root.props['data-stage']).toBe(StageType.COMMIT);
-  expectAnimationCellStyles(root, keys, frameId, StageType.COMMIT, options);
+  expectAnimationCellStyles(root, keys, frameIndex, StageType.COMMIT, options);
 };
-const expectAnimationStage = (root: Root, keys: KeysStore, frameId: string, options: Options) => {
+const expectAnimationStage = (
+  root: Root,
+  keys: KeysStore,
+  frameIndex: number,
+  options: Options
+) => {
   assert(!Array.isArray(root));
 
   expect(root.props['id']).toBe('wrapper');
   expect(root.props['data-stage']).toBe(StageType.ANIMATE);
-  expectAnimationCellStyles(root, keys, frameId, StageType.ANIMATE, options);
+  expectAnimationCellStyles(root, keys, frameIndex, StageType.ANIMATE, options);
 };
 
 const withFakeTimers = (
@@ -318,11 +323,11 @@ const expectFullCycleToWork = (
   let root: Root;
   root = _root.toJSON() as Root;
 
-  expectStaleStage(root, keys, '1');
+  expectStaleStage(root, keys, 1);
 
   // Update keys, move to measure stage and a new frame
   act(() => {
-    _root.update(<Example keys={keys['2']} options={options} />);
+    _root.update(<Example keys={keys[2]} options={options} />);
   });
   if (options.dynamicDirection === 'off') {
     expect(setTimeout).toHaveBeenCalledTimes(2);
@@ -346,16 +351,16 @@ const expectFullCycleToWork = (
   // should have 3 children now
   expect(root.length).toBe(3);
 
-  expectMeasureStage(root[0], keys, '1', options);
-  expectMeasureStage(root[1], keys, '2', options);
+  expectMeasureStage(root[0], keys, 1, options);
+  expectMeasureStage(root[1], keys, 2, options);
 
   // measure frame 1
-  expectChildrenOrdering(root[0], keys['1'].join());
+  expectChildrenOrdering(root[0], keys[1].join());
   // measure frame 2
-  expectChildrenOrdering(root[1], keys['2'].join());
+  expectChildrenOrdering(root[1], keys[2].join());
   // stale frame 1
-  expectStaleStage(root[2], keys, '1');
-  expectChildrenOrdering(root[2], keys['1'].join());
+  expectStaleStage(root[2], keys, 1);
+  expectChildrenOrdering(root[2], keys[1].join());
 
   if (options.dynamicDirection !== 'off') {
     // Move to commit stage
@@ -372,7 +377,7 @@ const expectFullCycleToWork = (
 
     root = _root.toJSON() as Root;
 
-    expectCommitStage(root, keys, '2', options);
+    expectCommitStage(root, keys, 2, options);
   }
   // Move to animate stage
   act(() => {
@@ -382,7 +387,7 @@ const expectFullCycleToWork = (
   root = _root.toJSON() as Root;
 
   // children ordering should be according to frame 1
-  expectAnimationStage(root, keys, '2', options);
+  expectAnimationStage(root, keys, 2, options);
   // children of the animation stage is the uniq keys from all frames
   expectChildrenOrdering(root, [...new Set([...keys['1'], ...keys['2']])].join());
 
@@ -425,7 +430,7 @@ const expectFullCycleToWork = (
 
   root = _root.toJSON() as Root;
 
-  expectStaleStage(root, keys, '2');
+  expectStaleStage(root, keys, 2);
 };
 
 const runMultipleAnimations = (options: Options) => {
@@ -441,11 +446,11 @@ const runMultipleAnimations = (options: Options) => {
     let root: Root;
     root = _root.toJSON() as Root;
 
-    expectStaleStage(root, keys, '1');
+    expectStaleStage(root, keys, 1);
 
     // Update keys, move to measure stage and a new frame
     act(() => {
-      _root.update(<Example keys={keys['2']} options={options} />);
+      _root.update(<Example keys={keys[2]} options={options} />);
     });
 
     expect(setTimeout).toHaveBeenCalledTimes(1);
@@ -457,9 +462,9 @@ const runMultipleAnimations = (options: Options) => {
 
     root = _root.toJSON() as Root;
 
-    expectMeasureStage(root[0], keys, '1', options);
-    expectMeasureStage(root[1], keys, '2', options);
-    expectStaleStage(root[2], keys, '1');
+    expectMeasureStage(root[0], keys, 1, options);
+    expectMeasureStage(root[1], keys, 2, options);
+    expectStaleStage(root[2], keys, 1);
 
     // Move to commit stage
     act(() => {
@@ -475,31 +480,31 @@ const runMultipleAnimations = (options: Options) => {
 
     root = _root.toJSON() as Root;
 
-    expectCommitStage(root, keys, '2', options);
+    expectCommitStage(root, keys, 2, options);
 
-    const expectAnimateWhileMeasure = (frameIds: number[]) => {
+    const expectAnimateWhileMeasure = (frameIndexes: number[]) => {
       root = _root.toJSON() as Root;
 
       assert(Array.isArray(root));
-      frameIds.forEach((frameId, index) => {
+      frameIndexes.forEach((frameIndex, index) => {
         // the first [:-1] elements are measure frames
         // as updates are instant there will be only 1 measure frame and 1 frame in animation
         const measureFrame = root[index];
-        expectMeasureStage(measureFrame, keys, String(frameId), options);
-        expectChildrenOrdering(measureFrame, keys[frameId].join());
+        expectMeasureStage(measureFrame, keys, frameIndex, options);
+        expectChildrenOrdering(measureFrame, keys[frameIndex].join());
       });
 
       // The last element is the animation frame.
       // This should render initial cells, but transformed targeting
-      // the latest measured frame (i.e. frameId - 1)
+      // the latest measured frame (i.e. frameIndex - 1)
       const animationFrame = root[root.length - 1];
       expectAnimationStage(
         animationFrame,
         keys,
-        String(frameIds[frameIds.length - 1] - 1),
+        frameIndexes[frameIndexes.length - 1] - 1,
         options
       );
-      expectChildrenOrdering(animationFrame, keys['1'].join());
+      expectChildrenOrdering(animationFrame, keys[1].join());
     };
 
     // move to animate frame 2
@@ -507,8 +512,8 @@ const runMultipleAnimations = (options: Options) => {
       jest.advanceTimersByTime(TEST_COMPONENT_UPDATE_DELAY * 2);
     });
     root = _root.toJSON() as Root;
-    expectAnimationStage(root, keys, '2', options);
-    expectChildrenOrdering(root, keys['1'].join());
+    expectAnimationStage(root, keys, 2, options);
+    expectChildrenOrdering(root, keys[1].join());
     expect(setTimeout).toHaveBeenCalledTimes(5);
     expect(setTimeout).toHaveBeenNthCalledWith(
       4,
@@ -519,7 +524,7 @@ const runMultipleAnimations = (options: Options) => {
 
     // move to animate frame 3
     act(() => {
-      _root.update(<Example keys={keys['3']} options={options} />);
+      _root.update(<Example keys={keys[3]} options={options} />);
     });
     root = _root.toJSON() as Root;
     // if reMeasureAllPreviousFramesOnNewKeys then all previous frames are measured, else just the latest 2
@@ -533,7 +538,7 @@ const runMultipleAnimations = (options: Options) => {
 
     // move to animate frame 4
     act(() => {
-      _root.update(<Example keys={keys['4']} options={options} />);
+      _root.update(<Example keys={keys[4]} options={options} />);
     });
     root = _root.toJSON() as Root;
     expectAnimateWhileMeasure(options.reMeasureAllPreviousFramesOnNewKeys ? [1, 2, 3, 4] : [3, 4]);
@@ -553,7 +558,7 @@ const runMultipleAnimations = (options: Options) => {
 
     root = _root.toJSON() as Root;
 
-    expectCommitStage(root, keys, '4', options);
+    expectCommitStage(root, keys, 4, options);
     expect(setTimeout).toHaveBeenCalledTimes(9);
     expect(setTimeout).toHaveBeenNthCalledWith(
       8,
@@ -581,7 +586,7 @@ const runMultipleAnimations = (options: Options) => {
 
     root = _root.toJSON() as Root;
 
-    expectAnimationStage(root, keys, '4', options);
+    expectAnimationStage(root, keys, 4, options);
 
     // move to stale
     act(() => {
@@ -601,7 +606,7 @@ const runMultipleAnimations = (options: Options) => {
 
     root = _root.toJSON() as Root;
 
-    expectStaleStage(root, keys, '4');
+    expectStaleStage(root, keys, 4);
   });
 };
 
@@ -719,14 +724,14 @@ describe('disableTransition', () => {
     withFakeTimers(keys, options, _root => {
       let root = _root.toJSON() as Root;
 
-      expectStaleStage(root, keys, '1');
+      expectStaleStage(root, keys, 1);
 
       // Update keys, move to measure stage and a new frame
-      _root.update(<Example keys={keys['2']} options={options} />);
+      _root.update(<Example keys={keys[2]} options={options} />);
 
       root = _root.toJSON() as Root;
 
-      expectStaleStage(root, keys, '2');
+      expectStaleStage(root, keys, 2);
     });
   });
 });
@@ -745,11 +750,11 @@ const registerDebugMeasureTest = (title: string, keys: KeysStore) => {
       let root: Root;
       root = _root.toJSON() as Root;
 
-      expectStaleStage(root, keys, '1');
+      expectStaleStage(root, keys, 1);
 
       // Update keys, move to measure stage and a new frame
       act(() => {
-        _root.update(<Example keys={keys['2']} options={options} />);
+        _root.update(<Example keys={keys[2]} options={options} />);
       });
 
       root = _root.toJSON() as Root;
@@ -757,13 +762,13 @@ const registerDebugMeasureTest = (title: string, keys: KeysStore) => {
       expect(setTimeout).toHaveBeenCalledTimes(1);
       expect(setTimeout).toHaveBeenNthCalledWith(1, expect.any(Function), options.debugMeasure);
 
-      expectMeasureStage(root[0], keys, '1', options);
-      expectMeasureStage(root[1], keys, '2', options);
-      expectStaleStage(root[2], keys, '1');
+      expectMeasureStage(root[0], keys, 1, options);
+      expectMeasureStage(root[1], keys, 2, options);
+      expectStaleStage(root[2], keys, 1);
 
       // move to frame 3, while debug measure is open
       act(() => {
-        _root.update(<Example keys={keys['3']} options={options} />);
+        _root.update(<Example keys={keys[3]} options={options} />);
       });
       root = _root.toJSON() as Root;
 
@@ -771,9 +776,9 @@ const registerDebugMeasureTest = (title: string, keys: KeysStore) => {
       expect(setTimeout).toHaveBeenNthCalledWith(2, expect.any(Function), options.debugMeasure);
 
       // two latest frames are measured
-      expectMeasureStage(root[0], keys, '2', options);
-      expectMeasureStage(root[1], keys, '3', options);
-      expectStaleStage(root[2], keys, '1');
+      expectMeasureStage(root[0], keys, 2, options);
+      expectMeasureStage(root[1], keys, 3, options);
+      expectStaleStage(root[2], keys, 1);
 
       // move to frame 4, while debug measure is open
       act(() => {
@@ -785,9 +790,9 @@ const registerDebugMeasureTest = (title: string, keys: KeysStore) => {
       expect(setTimeout).toHaveBeenNthCalledWith(3, expect.any(Function), options.debugMeasure);
 
       // two last frames are measured
-      expectMeasureStage(root[0], keys, '3', options);
-      expectMeasureStage(root[1], keys, '4', options);
-      expectStaleStage(root[2], keys, '1');
+      expectMeasureStage(root[0], keys, 3, options);
+      expectMeasureStage(root[1], keys, 4, options);
+      expectStaleStage(root[2], keys, 1);
 
       // will now move to commit, but should move to stale if keys[1] === keys[4]
       act(() => {
@@ -797,7 +802,7 @@ const registerDebugMeasureTest = (title: string, keys: KeysStore) => {
       if (keys[1].join() !== keys[4].join()) {
         root = _root.toJSON() as Root;
 
-        expectCommitStage(root, keys, '4', options);
+        expectCommitStage(root, keys, 4, options);
         expect(setTimeout).toHaveBeenCalledTimes(6);
         expect(setTimeout).toHaveBeenNthCalledWith(
           4,
@@ -822,7 +827,7 @@ const registerDebugMeasureTest = (title: string, keys: KeysStore) => {
 
         root = _root.toJSON() as Root;
 
-        expectAnimationStage(root, keys, '4', options);
+        expectAnimationStage(root, keys, 4, options);
 
         expect(setTimeout).toHaveBeenCalledTimes(8);
         expect(setTimeout).toHaveBeenNthCalledWith(
@@ -865,7 +870,7 @@ const registerDebugMeasureTest = (title: string, keys: KeysStore) => {
 
       root = _root.toJSON() as Root;
 
-      expectStaleStage(root, keys, '4');
+      expectStaleStage(root, keys, 4);
     });
   });
 };

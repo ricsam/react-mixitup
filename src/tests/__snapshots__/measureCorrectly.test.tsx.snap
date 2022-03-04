@@ -2,13 +2,13 @@
 
 exports[`basic functionality should cycle through stages 1`] = `
 <div
-  data-frame-id="1"
+  data-frame-index={1}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={1}
     data-stage="STALE"
     id="cell"
@@ -22,7 +22,7 @@ exports[`basic functionality should cycle through stages 1`] = `
     1
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={2}
     data-stage="STALE"
     id="cell"
@@ -36,7 +36,7 @@ exports[`basic functionality should cycle through stages 1`] = `
     2
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -54,13 +54,13 @@ exports[`basic functionality should cycle through stages 1`] = `
 
 exports[`basic functionality should cycle through stages 2`] = `
 <div
-  data-frame-id="1"
+  data-frame-index={1}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={1}
     data-stage="STALE"
     id="cell"
@@ -74,7 +74,7 @@ exports[`basic functionality should cycle through stages 2`] = `
     1
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={2}
     data-stage="STALE"
     id="cell"
@@ -88,7 +88,7 @@ exports[`basic functionality should cycle through stages 2`] = `
     2
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -106,13 +106,13 @@ exports[`basic functionality should cycle through stages 2`] = `
 
 exports[`basic functionality should cycle through stages 3`] = `
 <div
-  data-frame-id="2"
+  data-frame-index={2}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="2"
+    data-frame-index={2}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -126,7 +126,7 @@ exports[`basic functionality should cycle through stages 3`] = `
     3
   </div>
   <div
-    data-frame-id="2"
+    data-frame-index={2}
     data-key={2}
     data-stage="STALE"
     id="cell"
@@ -140,7 +140,7 @@ exports[`basic functionality should cycle through stages 3`] = `
     2
   </div>
   <div
-    data-frame-id="2"
+    data-frame-index={2}
     data-key={1}
     data-stage="STALE"
     id="cell"
@@ -158,13 +158,13 @@ exports[`basic functionality should cycle through stages 3`] = `
 
 exports[`basic functionality should keep animating while measuring new frames 1`] = `
 <div
-  data-frame-id="1"
+  data-frame-index={1}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={1}
     data-stage="STALE"
     id="cell"
@@ -178,7 +178,7 @@ exports[`basic functionality should keep animating while measuring new frames 1`
     1
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={2}
     data-stage="STALE"
     id="cell"
@@ -192,7 +192,7 @@ exports[`basic functionality should keep animating while measuring new frames 1`
     2
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -210,13 +210,13 @@ exports[`basic functionality should keep animating while measuring new frames 1`
 
 exports[`basic functionality should keep animating while measuring new frames 2`] = `
 <div
-  data-frame-id="1"
+  data-frame-index={1}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={1}
     data-stage="STALE"
     id="cell"
@@ -230,7 +230,7 @@ exports[`basic functionality should keep animating while measuring new frames 2`
     1
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={2}
     data-stage="STALE"
     id="cell"
@@ -244,7 +244,7 @@ exports[`basic functionality should keep animating while measuring new frames 2`
     2
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -262,13 +262,13 @@ exports[`basic functionality should keep animating while measuring new frames 2`
 
 exports[`basic functionality should keep animating while measuring new frames 3`] = `
 <div
-  data-frame-id="4"
+  data-frame-index={4}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="4"
+    data-frame-index={4}
     data-key={1}
     data-stage="STALE"
     id="cell"
@@ -282,7 +282,7 @@ exports[`basic functionality should keep animating while measuring new frames 3`
     1
   </div>
   <div
-    data-frame-id="4"
+    data-frame-index={4}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -296,7 +296,7 @@ exports[`basic functionality should keep animating while measuring new frames 3`
     3
   </div>
   <div
-    data-frame-id="4"
+    data-frame-index={4}
     data-key={2}
     data-stage="STALE"
     id="cell"
@@ -314,13 +314,13 @@ exports[`basic functionality should keep animating while measuring new frames 3`
 
 exports[`debugMeasure should work with debugMeasure not same first frame as last frame 1`] = `
 <div
-  data-frame-id="1"
+  data-frame-index={1}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={1}
     data-stage="STALE"
     id="cell"
@@ -334,7 +334,7 @@ exports[`debugMeasure should work with debugMeasure not same first frame as last
     1
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={2}
     data-stage="STALE"
     id="cell"
@@ -348,7 +348,7 @@ exports[`debugMeasure should work with debugMeasure not same first frame as last
     2
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -366,13 +366,13 @@ exports[`debugMeasure should work with debugMeasure not same first frame as last
 
 exports[`debugMeasure should work with debugMeasure not same first frame as last frame 2`] = `
 <div
-  data-frame-id="1"
+  data-frame-index={1}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={1}
     data-stage="STALE"
     id="cell"
@@ -386,7 +386,7 @@ exports[`debugMeasure should work with debugMeasure not same first frame as last
     1
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={2}
     data-stage="STALE"
     id="cell"
@@ -400,7 +400,7 @@ exports[`debugMeasure should work with debugMeasure not same first frame as last
     2
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -418,13 +418,13 @@ exports[`debugMeasure should work with debugMeasure not same first frame as last
 
 exports[`debugMeasure should work with debugMeasure not same first frame as last frame 3`] = `
 <div
-  data-frame-id="1"
+  data-frame-index={1}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={1}
     data-stage="STALE"
     id="cell"
@@ -438,7 +438,7 @@ exports[`debugMeasure should work with debugMeasure not same first frame as last
     1
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={2}
     data-stage="STALE"
     id="cell"
@@ -452,7 +452,7 @@ exports[`debugMeasure should work with debugMeasure not same first frame as last
     2
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -470,13 +470,13 @@ exports[`debugMeasure should work with debugMeasure not same first frame as last
 
 exports[`debugMeasure should work with debugMeasure not same first frame as last frame 4`] = `
 <div
-  data-frame-id="1"
+  data-frame-index={1}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={1}
     data-stage="STALE"
     id="cell"
@@ -490,7 +490,7 @@ exports[`debugMeasure should work with debugMeasure not same first frame as last
     1
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={2}
     data-stage="STALE"
     id="cell"
@@ -504,7 +504,7 @@ exports[`debugMeasure should work with debugMeasure not same first frame as last
     2
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -522,13 +522,13 @@ exports[`debugMeasure should work with debugMeasure not same first frame as last
 
 exports[`debugMeasure should work with debugMeasure not same first frame as last frame 5`] = `
 <div
-  data-frame-id="4"
+  data-frame-index={4}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="4"
+    data-frame-index={4}
     data-key={1}
     data-stage="STALE"
     id="cell"
@@ -542,7 +542,7 @@ exports[`debugMeasure should work with debugMeasure not same first frame as last
     1
   </div>
   <div
-    data-frame-id="4"
+    data-frame-index={4}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -556,7 +556,7 @@ exports[`debugMeasure should work with debugMeasure not same first frame as last
     3
   </div>
   <div
-    data-frame-id="4"
+    data-frame-index={4}
     data-key={2}
     data-stage="STALE"
     id="cell"
@@ -574,13 +574,13 @@ exports[`debugMeasure should work with debugMeasure not same first frame as last
 
 exports[`debugMeasure should work with debugMeasure same first frame as last frame 1`] = `
 <div
-  data-frame-id="1"
+  data-frame-index={1}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={1}
     data-stage="STALE"
     id="cell"
@@ -594,7 +594,7 @@ exports[`debugMeasure should work with debugMeasure same first frame as last fra
     1
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={2}
     data-stage="STALE"
     id="cell"
@@ -608,7 +608,7 @@ exports[`debugMeasure should work with debugMeasure same first frame as last fra
     2
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -626,13 +626,13 @@ exports[`debugMeasure should work with debugMeasure same first frame as last fra
 
 exports[`debugMeasure should work with debugMeasure same first frame as last frame 2`] = `
 <div
-  data-frame-id="1"
+  data-frame-index={1}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={1}
     data-stage="STALE"
     id="cell"
@@ -646,7 +646,7 @@ exports[`debugMeasure should work with debugMeasure same first frame as last fra
     1
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={2}
     data-stage="STALE"
     id="cell"
@@ -660,7 +660,7 @@ exports[`debugMeasure should work with debugMeasure same first frame as last fra
     2
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -678,13 +678,13 @@ exports[`debugMeasure should work with debugMeasure same first frame as last fra
 
 exports[`debugMeasure should work with debugMeasure same first frame as last frame 3`] = `
 <div
-  data-frame-id="1"
+  data-frame-index={1}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={1}
     data-stage="STALE"
     id="cell"
@@ -698,7 +698,7 @@ exports[`debugMeasure should work with debugMeasure same first frame as last fra
     1
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={2}
     data-stage="STALE"
     id="cell"
@@ -712,7 +712,7 @@ exports[`debugMeasure should work with debugMeasure same first frame as last fra
     2
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -730,13 +730,13 @@ exports[`debugMeasure should work with debugMeasure same first frame as last fra
 
 exports[`debugMeasure should work with debugMeasure same first frame as last frame 4`] = `
 <div
-  data-frame-id="1"
+  data-frame-index={1}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={1}
     data-stage="STALE"
     id="cell"
@@ -750,7 +750,7 @@ exports[`debugMeasure should work with debugMeasure same first frame as last fra
     1
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={2}
     data-stage="STALE"
     id="cell"
@@ -764,7 +764,7 @@ exports[`debugMeasure should work with debugMeasure same first frame as last fra
     2
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -782,13 +782,13 @@ exports[`debugMeasure should work with debugMeasure same first frame as last fra
 
 exports[`debugMeasure should work with debugMeasure same first frame as last frame 5`] = `
 <div
-  data-frame-id="4"
+  data-frame-index={4}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="4"
+    data-frame-index={4}
     data-key={1}
     data-stage="STALE"
     id="cell"
@@ -802,7 +802,7 @@ exports[`debugMeasure should work with debugMeasure same first frame as last fra
     1
   </div>
   <div
-    data-frame-id="4"
+    data-frame-index={4}
     data-key={2}
     data-stage="STALE"
     id="cell"
@@ -816,7 +816,7 @@ exports[`debugMeasure should work with debugMeasure same first frame as last fra
     2
   </div>
   <div
-    data-frame-id="4"
+    data-frame-index={4}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -834,13 +834,13 @@ exports[`debugMeasure should work with debugMeasure same first frame as last fra
 
 exports[`disableTransition should always be stale 1`] = `
 <div
-  data-frame-id="1"
+  data-frame-index={1}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={1}
     data-stage="STALE"
     id="cell"
@@ -854,7 +854,7 @@ exports[`disableTransition should always be stale 1`] = `
     1
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={2}
     data-stage="STALE"
     id="cell"
@@ -868,7 +868,7 @@ exports[`disableTransition should always be stale 1`] = `
     2
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -886,13 +886,13 @@ exports[`disableTransition should always be stale 1`] = `
 
 exports[`disableTransition should always be stale 2`] = `
 <div
-  data-frame-id="2"
+  data-frame-index={2}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="2"
+    data-frame-index={2}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -906,7 +906,7 @@ exports[`disableTransition should always be stale 2`] = `
     3
   </div>
   <div
-    data-frame-id="2"
+    data-frame-index={2}
     data-key={2}
     data-stage="STALE"
     id="cell"
@@ -920,7 +920,7 @@ exports[`disableTransition should always be stale 2`] = `
     2
   </div>
   <div
-    data-frame-id="2"
+    data-frame-index={2}
     data-key={1}
     data-stage="STALE"
     id="cell"
@@ -938,13 +938,13 @@ exports[`disableTransition should always be stale 2`] = `
 
 exports[`dynamicDirection should decrease height when adding new items 1`] = `
 <div
-  data-frame-id="1"
+  data-frame-index={1}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={1}
     data-stage="STALE"
     id="cell"
@@ -958,7 +958,7 @@ exports[`dynamicDirection should decrease height when adding new items 1`] = `
     1
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={2}
     data-stage="STALE"
     id="cell"
@@ -972,7 +972,7 @@ exports[`dynamicDirection should decrease height when adding new items 1`] = `
     2
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -990,13 +990,13 @@ exports[`dynamicDirection should decrease height when adding new items 1`] = `
 
 exports[`dynamicDirection should decrease height when adding new items 2`] = `
 <div
-  data-frame-id="1"
+  data-frame-index={1}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={1}
     data-stage="STALE"
     id="cell"
@@ -1010,7 +1010,7 @@ exports[`dynamicDirection should decrease height when adding new items 2`] = `
     1
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={2}
     data-stage="STALE"
     id="cell"
@@ -1024,7 +1024,7 @@ exports[`dynamicDirection should decrease height when adding new items 2`] = `
     2
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -1042,13 +1042,13 @@ exports[`dynamicDirection should decrease height when adding new items 2`] = `
 
 exports[`dynamicDirection should decrease height when adding new items 3`] = `
 <div
-  data-frame-id="2"
+  data-frame-index={2}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="2"
+    data-frame-index={2}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -1062,7 +1062,7 @@ exports[`dynamicDirection should decrease height when adding new items 3`] = `
     3
   </div>
   <div
-    data-frame-id="2"
+    data-frame-index={2}
     data-key={2}
     data-stage="STALE"
     id="cell"
@@ -1080,13 +1080,13 @@ exports[`dynamicDirection should decrease height when adding new items 3`] = `
 
 exports[`dynamicDirection should decrease width when adding new items 1`] = `
 <div
-  data-frame-id="1"
+  data-frame-index={1}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={1}
     data-stage="STALE"
     id="cell"
@@ -1100,7 +1100,7 @@ exports[`dynamicDirection should decrease width when adding new items 1`] = `
     1
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={2}
     data-stage="STALE"
     id="cell"
@@ -1114,7 +1114,7 @@ exports[`dynamicDirection should decrease width when adding new items 1`] = `
     2
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -1132,13 +1132,13 @@ exports[`dynamicDirection should decrease width when adding new items 1`] = `
 
 exports[`dynamicDirection should decrease width when adding new items 2`] = `
 <div
-  data-frame-id="1"
+  data-frame-index={1}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={1}
     data-stage="STALE"
     id="cell"
@@ -1152,7 +1152,7 @@ exports[`dynamicDirection should decrease width when adding new items 2`] = `
     1
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={2}
     data-stage="STALE"
     id="cell"
@@ -1166,7 +1166,7 @@ exports[`dynamicDirection should decrease width when adding new items 2`] = `
     2
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -1184,13 +1184,13 @@ exports[`dynamicDirection should decrease width when adding new items 2`] = `
 
 exports[`dynamicDirection should decrease width when adding new items 3`] = `
 <div
-  data-frame-id="2"
+  data-frame-index={2}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="2"
+    data-frame-index={2}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -1204,7 +1204,7 @@ exports[`dynamicDirection should decrease width when adding new items 3`] = `
     3
   </div>
   <div
-    data-frame-id="2"
+    data-frame-index={2}
     data-key={2}
     data-stage="STALE"
     id="cell"
@@ -1222,13 +1222,13 @@ exports[`dynamicDirection should decrease width when adding new items 3`] = `
 
 exports[`dynamicDirection should increase height when adding new items 1`] = `
 <div
-  data-frame-id="1"
+  data-frame-index={1}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={1}
     data-stage="STALE"
     id="cell"
@@ -1242,7 +1242,7 @@ exports[`dynamicDirection should increase height when adding new items 1`] = `
     1
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={2}
     data-stage="STALE"
     id="cell"
@@ -1256,7 +1256,7 @@ exports[`dynamicDirection should increase height when adding new items 1`] = `
     2
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -1274,13 +1274,13 @@ exports[`dynamicDirection should increase height when adding new items 1`] = `
 
 exports[`dynamicDirection should increase height when adding new items 2`] = `
 <div
-  data-frame-id="1"
+  data-frame-index={1}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={1}
     data-stage="STALE"
     id="cell"
@@ -1294,7 +1294,7 @@ exports[`dynamicDirection should increase height when adding new items 2`] = `
     1
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={2}
     data-stage="STALE"
     id="cell"
@@ -1308,7 +1308,7 @@ exports[`dynamicDirection should increase height when adding new items 2`] = `
     2
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -1326,13 +1326,13 @@ exports[`dynamicDirection should increase height when adding new items 2`] = `
 
 exports[`dynamicDirection should increase height when adding new items 3`] = `
 <div
-  data-frame-id="2"
+  data-frame-index={2}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="2"
+    data-frame-index={2}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -1346,7 +1346,7 @@ exports[`dynamicDirection should increase height when adding new items 3`] = `
     3
   </div>
   <div
-    data-frame-id="2"
+    data-frame-index={2}
     data-key={2}
     data-stage="STALE"
     id="cell"
@@ -1360,7 +1360,7 @@ exports[`dynamicDirection should increase height when adding new items 3`] = `
     2
   </div>
   <div
-    data-frame-id="2"
+    data-frame-index={2}
     data-key={1}
     data-stage="STALE"
     id="cell"
@@ -1374,7 +1374,7 @@ exports[`dynamicDirection should increase height when adding new items 3`] = `
     1
   </div>
   <div
-    data-frame-id="2"
+    data-frame-index={2}
     data-key={4}
     data-stage="STALE"
     id="cell"
@@ -1392,13 +1392,13 @@ exports[`dynamicDirection should increase height when adding new items 3`] = `
 
 exports[`dynamicDirection should increase width when adding new items 1`] = `
 <div
-  data-frame-id="1"
+  data-frame-index={1}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={1}
     data-stage="STALE"
     id="cell"
@@ -1412,7 +1412,7 @@ exports[`dynamicDirection should increase width when adding new items 1`] = `
     1
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={2}
     data-stage="STALE"
     id="cell"
@@ -1426,7 +1426,7 @@ exports[`dynamicDirection should increase width when adding new items 1`] = `
     2
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -1444,13 +1444,13 @@ exports[`dynamicDirection should increase width when adding new items 1`] = `
 
 exports[`dynamicDirection should increase width when adding new items 2`] = `
 <div
-  data-frame-id="1"
+  data-frame-index={1}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={1}
     data-stage="STALE"
     id="cell"
@@ -1464,7 +1464,7 @@ exports[`dynamicDirection should increase width when adding new items 2`] = `
     1
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={2}
     data-stage="STALE"
     id="cell"
@@ -1478,7 +1478,7 @@ exports[`dynamicDirection should increase width when adding new items 2`] = `
     2
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -1496,13 +1496,13 @@ exports[`dynamicDirection should increase width when adding new items 2`] = `
 
 exports[`dynamicDirection should increase width when adding new items 3`] = `
 <div
-  data-frame-id="2"
+  data-frame-index={2}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="2"
+    data-frame-index={2}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -1516,7 +1516,7 @@ exports[`dynamicDirection should increase width when adding new items 3`] = `
     3
   </div>
   <div
-    data-frame-id="2"
+    data-frame-index={2}
     data-key={2}
     data-stage="STALE"
     id="cell"
@@ -1530,7 +1530,7 @@ exports[`dynamicDirection should increase width when adding new items 3`] = `
     2
   </div>
   <div
-    data-frame-id="2"
+    data-frame-index={2}
     data-key={1}
     data-stage="STALE"
     id="cell"
@@ -1544,7 +1544,7 @@ exports[`dynamicDirection should increase width when adding new items 3`] = `
     1
   </div>
   <div
-    data-frame-id="2"
+    data-frame-index={2}
     data-key={4}
     data-stage="STALE"
     id="cell"
@@ -1562,13 +1562,13 @@ exports[`dynamicDirection should increase width when adding new items 3`] = `
 
 exports[`dynamicDirection should skip commit if dynamic direction is off 1`] = `
 <div
-  data-frame-id="1"
+  data-frame-index={1}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={1}
     data-stage="STALE"
     id="cell"
@@ -1582,7 +1582,7 @@ exports[`dynamicDirection should skip commit if dynamic direction is off 1`] = `
     1
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={2}
     data-stage="STALE"
     id="cell"
@@ -1596,7 +1596,7 @@ exports[`dynamicDirection should skip commit if dynamic direction is off 1`] = `
     2
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -1614,13 +1614,13 @@ exports[`dynamicDirection should skip commit if dynamic direction is off 1`] = `
 
 exports[`dynamicDirection should skip commit if dynamic direction is off 2`] = `
 <div
-  data-frame-id="1"
+  data-frame-index={1}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={1}
     data-stage="STALE"
     id="cell"
@@ -1634,7 +1634,7 @@ exports[`dynamicDirection should skip commit if dynamic direction is off 2`] = `
     1
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={2}
     data-stage="STALE"
     id="cell"
@@ -1648,7 +1648,7 @@ exports[`dynamicDirection should skip commit if dynamic direction is off 2`] = `
     2
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -1666,13 +1666,13 @@ exports[`dynamicDirection should skip commit if dynamic direction is off 2`] = `
 
 exports[`dynamicDirection should skip commit if dynamic direction is off 3`] = `
 <div
-  data-frame-id="2"
+  data-frame-index={2}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="2"
+    data-frame-index={2}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -1686,7 +1686,7 @@ exports[`dynamicDirection should skip commit if dynamic direction is off 3`] = `
     3
   </div>
   <div
-    data-frame-id="2"
+    data-frame-index={2}
     data-key={2}
     data-stage="STALE"
     id="cell"
@@ -1704,13 +1704,13 @@ exports[`dynamicDirection should skip commit if dynamic direction is off 3`] = `
 
 exports[`reMeasureAllPreviousFramesOnNewKeys should work 1`] = `
 <div
-  data-frame-id="1"
+  data-frame-index={1}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={1}
     data-stage="STALE"
     id="cell"
@@ -1724,7 +1724,7 @@ exports[`reMeasureAllPreviousFramesOnNewKeys should work 1`] = `
     1
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={2}
     data-stage="STALE"
     id="cell"
@@ -1738,7 +1738,7 @@ exports[`reMeasureAllPreviousFramesOnNewKeys should work 1`] = `
     2
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -1756,13 +1756,13 @@ exports[`reMeasureAllPreviousFramesOnNewKeys should work 1`] = `
 
 exports[`reMeasureAllPreviousFramesOnNewKeys should work 2`] = `
 <div
-  data-frame-id="1"
+  data-frame-index={1}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={1}
     data-stage="STALE"
     id="cell"
@@ -1776,7 +1776,7 @@ exports[`reMeasureAllPreviousFramesOnNewKeys should work 2`] = `
     1
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={2}
     data-stage="STALE"
     id="cell"
@@ -1790,7 +1790,7 @@ exports[`reMeasureAllPreviousFramesOnNewKeys should work 2`] = `
     2
   </div>
   <div
-    data-frame-id="1"
+    data-frame-index={1}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -1808,13 +1808,13 @@ exports[`reMeasureAllPreviousFramesOnNewKeys should work 2`] = `
 
 exports[`reMeasureAllPreviousFramesOnNewKeys should work 3`] = `
 <div
-  data-frame-id="4"
+  data-frame-index={4}
   data-stage="STALE"
   id="wrapper"
   style={Object {}}
 >
   <div
-    data-frame-id="4"
+    data-frame-index={4}
     data-key={1}
     data-stage="STALE"
     id="cell"
@@ -1828,7 +1828,7 @@ exports[`reMeasureAllPreviousFramesOnNewKeys should work 3`] = `
     1
   </div>
   <div
-    data-frame-id="4"
+    data-frame-index={4}
     data-key={3}
     data-stage="STALE"
     id="cell"
@@ -1842,7 +1842,7 @@ exports[`reMeasureAllPreviousFramesOnNewKeys should work 3`] = `
     3
   </div>
   <div
-    data-frame-id="4"
+    data-frame-index={4}
     data-key={2}
     data-stage="STALE"
     id="cell"

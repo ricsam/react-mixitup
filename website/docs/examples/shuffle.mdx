@@ -1,0 +1,63 @@
+# Shuffle
+
+```tsx live
+function Shuffle() {
+  const NUM_CELLS = 5;
+  const [keys, setKeys] = React.useState(() => range(NUM_CELLS));
+
+  const _shuffle = () => {
+    setKeys(shuffle(range(NUM_CELLS)));
+  };
+
+  const TRANSITION_DURATION = 250;
+
+  return (
+    <div>
+      <button onClick={_shuffle}>Shuffle</button>
+      <ReactMixitup
+        keys={keys}
+        // dynamicDirection is off because keys.length never changes
+        dynamicDirection="off"
+        transitionDuration={TRANSITION_DURATION}
+        renderCell={(key, style, ref) => (
+          <div
+            key={key}
+            ref={ref}
+            style={{
+              width: '48px',
+              height: '48px',
+              border: '1px solid black',
+              margin: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              // transition-duration must be same as transitionDuration prop
+              transition: `transform ${TRANSITION_DURATION}ms ease`,
+              ...style
+            }}
+          >
+            {key}
+          </div>
+        )}
+        renderWrapper={(style, ref, children) => {
+          return (
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                boxSizing: 'border-box',
+                width: 48 * 3,
+                padding: '12px',
+                ...style
+              }}
+              ref={ref}
+            >
+              {children}
+            </div>
+          );
+        }}
+      />
+    </div>
+  );
+}
+```

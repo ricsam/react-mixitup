@@ -126,9 +126,9 @@ export interface IFrame {
    */
   positions: IPositions;
   /**
-   * A unique id used for debugging purposes to differentiate each IFrame
+   * A unique index used for debugging purposes to differentiate each IFrame
    */
-  id: string;
+  index: number;
 
   /**
    * If the frame has been measured
@@ -340,6 +340,8 @@ export const ReactMixitup = React.memo(
         throw new Error('In prop keys: every key must be unique');
       }
 
+      const indexRef = React.useRef(0);
+
       const nextHash = getKeysHash(keys);
 
       const refs = React.useRef<{
@@ -350,7 +352,7 @@ export const ReactMixitup = React.memo(
       }>(undefined as any);
 
       if (!refs.current) {
-        const frame = createFrame(keys);
+        const frame = createFrame(keys, indexRef.current++);
         refs.current = {
           frames: [frame],
           persistedElement: null,
@@ -451,7 +453,7 @@ export const ReactMixitup = React.memo(
 
       if (refs.current.hash !== nextHash) {
         refs.current.hash = nextHash;
-        const frame = createFrame(keys);
+        const frame = createFrame(keys, indexRef.current++);
         if (disableTransition) {
           refs.current.frames.splice(0, refs.current.frames.length, frame);
           refs.current.stage = {
@@ -824,7 +826,7 @@ export const ReactMixitup = React.memo(
           <MixitupFragment key={DOMLevel.ROOT} level={DOMLevel.ROOT}>
             <MixitupFragment key={DOMLevel.HIDDEN} level={DOMLevel.HIDDEN}>
               {measureFrames.map(frame => {
-                return <React.Fragment key={frame.id}>{measureFrame(frame)}</React.Fragment>;
+                return <React.Fragment key={frame.index}>{measureFrame(frame)}</React.Fragment>;
               })}
             </MixitupFragment>
             <MixitupFragment key={DOMLevel.VISIBLE} level={DOMLevel.VISIBLE}>

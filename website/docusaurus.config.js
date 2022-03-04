@@ -16,6 +16,8 @@ const config = {
   organizationName: 'ricsam', // Usually your GitHub org/user name.
   projectName: 'react-mixitup', // Usually your repo name.
 
+  themes: ['@docusaurus/theme-live-codeblock'],
+
   presets: [
     [
       'classic',
