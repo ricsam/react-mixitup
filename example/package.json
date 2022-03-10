@@ -15,7 +15,7 @@
     "lodash": "link:../node_modules/lodash",
     "react": "link:../node_modules/react",
     "react-dom": "link:../node_modules/react-dom",
-    "react-mixitup": "link:..",
+    "react-mixitup": "^3.0.0",
     "react-scripts": "^5.0.0",
     "styled-components": "^5.3.3",
     "typescript": "link:../node_modules/typescript",
