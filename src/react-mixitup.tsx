@@ -1,5 +1,5 @@
 import React from 'react';
-import { createFrame } from './utils';
+import { createFrame, getKeysHash } from './utils';
 
 /**
  * IPosition
@@ -240,13 +240,6 @@ interface IProps<RMKey extends string | number> {
    * before removing
    */
   debugMeasure?: number;
-}
-
-/**
- * Creates a hash of the keys in order to determine if the keys are updated
- */
-export function getKeysHash(keys: (string | number)[]): string {
-  return keys.map(k => `${(typeof k)[0]}${k}`).join(',');
 }
 
 export enum DOMLevel {
