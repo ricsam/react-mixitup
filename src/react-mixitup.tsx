@@ -342,10 +342,14 @@ const processEnv = (name: string) => {
 const debug = (...msg: any[]) => {
   if (processEnv('DEBUG:react-mixitup')) {
     console.log(...msg);
-  } else if (typeof window !== 'undefined' && window.localStorage) {
-    if (window.localStorage.getItem('DEBUG:react-mixitup')) {
-      console.log(...msg);
-    }
+  } else if (typeof window !== 'undefined') {
+    try {
+      if (window.localStorage) {
+        if (window.localStorage.getItem('DEBUG:react-mixitup')) {
+          console.log(...msg);
+        }
+      }
+    } catch (err) {}
   }
 };
 
