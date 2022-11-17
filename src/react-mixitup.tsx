@@ -419,12 +419,12 @@ export function ReactMixitupComponent<RMKey extends string | number>(
   const [, _update] = React.useState(0);
 
   const hasUnmounted = React.useRef(false);
-  React.useEffect(
-    () => () => {
+  React.useEffect(() => {
+    hasUnmounted.current = false;
+    return () => {
       hasUnmounted.current = true;
-    },
-    []
-  );
+    };
+  }, []);
 
   const update = () => {
     setTimeout(
