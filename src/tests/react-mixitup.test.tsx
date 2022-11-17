@@ -1,17 +1,10 @@
-import { range, shuffle } from 'lodash';
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { create } from 'react-test-renderer';
 import { ReactMixitup } from '../react-mixitup';
 import { Example } from './Example';
-import renderer, { act, create } from 'react-test-renderer';
-
-const render = (component: React.FunctionComponentElement<any>) => {
-  const div = document.createElement('div');
-  ReactDOM.render(component, div);
-};
 
 it('can render in react-dom', () => {
-  render(
+  create(
     <Example
       keys={[1, 2, 3]}
       options={{
@@ -33,7 +26,7 @@ describe('prop tests', () => {
   });
   it('should throw if no keys', () => {
     expect(() => {
-      render(
+      create(
         <ReactMixitup
           keys={(undefined as unknown) as number[]}
           renderCell={() => null}
@@ -45,7 +38,7 @@ describe('prop tests', () => {
   });
   it('should throw if keys are not unique', () => {
     expect(() => {
-      render(
+      create(
         <ReactMixitup
           keys={[1, 2, 3, 3, 3]}
           renderCell={() => null}
@@ -57,7 +50,7 @@ describe('prop tests', () => {
   });
   it('should throw if transitionDuration is lt 0', () => {
     expect(() => {
-      render(
+      create(
         <ReactMixitup
           keys={[1, 2, 3]}
           renderCell={() => null}
@@ -71,7 +64,7 @@ describe('prop tests', () => {
   });
   it('should throw if renderCell is not a function', () => {
     expect(() => {
-      render(
+      create(
         <ReactMixitup
           keys={[1, 2, 3]}
           renderCell={undefined as any}
@@ -83,7 +76,7 @@ describe('prop tests', () => {
   });
   it('should throw if renderWrapper is not a function', () => {
     expect(() => {
-      render(
+      create(
         <ReactMixitup
           keys={[1, 2, 3]}
           renderCell={() => null}
@@ -96,7 +89,7 @@ describe('prop tests', () => {
   });
   it('should throw if debugMeasure is a truthy but not a number', () => {
     expect(() => {
-      render(
+      create(
         <ReactMixitup
           keys={[1, 2, 3]}
           renderCell={() => null}

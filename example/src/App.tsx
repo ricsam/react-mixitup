@@ -203,7 +203,7 @@ function App() {
             </div>
           </Flex>
           <div>
-            <button onClick={_toggleSubset}>Toggle subset</button>
+            <button onClick={_toggleSubset}>Toggle subset (disable transition)</button>
             <ReactMixitup
               transitionDuration={1000}
               dynamicDirection='vertical'

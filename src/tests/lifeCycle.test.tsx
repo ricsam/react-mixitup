@@ -1,9 +1,8 @@
-import { get, omit, range, shuffle, uniq } from 'lodash';
+import assert from 'assert';
+import { get, range } from 'lodash';
 import React from 'react';
 import renderer, { act, create } from 'react-test-renderer';
-import { render } from '@testing-library/react';
 import {
-  DOMLevel,
   ICellStyle,
   IFrame,
   IWrapperStyle,
@@ -11,8 +10,7 @@ import {
   TEST_COMPONENT_UPDATE_DELAY
 } from '../react-mixitup';
 import * as utils from '../utils';
-import assert from 'assert';
-import { Options, Example } from './Example';
+import { Example, Options } from './Example';
 
 let mockGenName: jest.SpyInstance<IFrame<string | number>, [(string | number)[], number]>;
 

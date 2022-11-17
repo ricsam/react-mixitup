@@ -11,15 +11,19 @@
     "@types/node": "link:../node_modules/@types/node",
     "@types/react": "link:../node_modules/@types/react",
     "@types/react-dom": "link:../node_modules/@types/react-dom",
-    "@types/styled-components": "^5.1.23",
+    "@types/styled-components": "^5.1.26",
     "lodash": "link:../node_modules/lodash",
     "react": "link:../node_modules/react",
     "react-dom": "link:../node_modules/react-dom",
     "react-mixitup": "^3.0.0",
     "react-scripts": "^5.0.0",
-    "styled-components": "^5.3.3",
+    "styled-components": "^5.3.6",
     "typescript": "link:../node_modules/typescript",
     "web-vitals": "link:../node_modules/web-vitals"
+  },
+  "resolutions": {
+    "@types/react": "link:../node_modules/@types/react",
+    "@types/react-dom": "link:../node_modules/@types/react-dom"
   },
   "scripts": {
     "start": "react-scripts start",
