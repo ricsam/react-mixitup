@@ -15,6 +15,7 @@
   "main": "dist/react-mixitup.umd.js",
   "module": "dist/react-mixitup.es5.js",
   "typings": "dist/types/react-mixitup.d.ts",
+  "homepage": "https://react-mixitup.ricsam.dev",
   "files": [
     "dist"
   ],

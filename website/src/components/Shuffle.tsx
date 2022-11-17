@@ -15,12 +15,14 @@ function getRandomInt(min: number, max: number) {
 
 // const getItems = () => shuffle(range(88)).map(s => String(s));
 
+const initial = range(100).map(String);
+
 export const Shuffle = () => {
   const [muchShuffle, setMuchShuffle] = React.useState(false);
   const getItems = () =>
-    uniq(shuffle(range(getRandomInt(muchShuffle ? 0 : 48, 100)).map(v => String(v))));
+    uniq(shuffle(range(getRandomInt(muchShuffle ? 0 : 48, 100)).map(String)));
 
-  const [items, setItems] = React.useState(getItems());
+  const [items, setItems] = React.useState(initial);
   const duration = 500;
   // const [items, setItems] = React.useState([1, 2]);
 
@@ -116,7 +118,7 @@ export const Shuffle = () => {
                 padding: '16px',
                 maxWidth: '560px',
                 borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
-                ...style,
+                ...style
                 // height: 400
               }}
               ref={ref}
