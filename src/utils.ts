@@ -1,6 +1,9 @@
 import { IFrame, getKeysHash } from './react-mixitup';
 
-export const createFrame = (keys: (string | number)[], index: number): IFrame => {
+export const createFrame = <RMKey extends string | number>(
+  keys: RMKey[],
+  index: number
+): IFrame<RMKey> => {
   const nextHash = getKeysHash(keys);
   return {
     index,

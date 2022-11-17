@@ -160,7 +160,7 @@ export const Off = () => {
       }}
     >
       <p>
-        <strong>dynamicDirection = 'off'</strong>
+        <strong>dynamicDirection = 'off' (better performance)</strong>
       </p>
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <div
@@ -248,6 +248,12 @@ export const Off = () => {
           <span>Moved vertically</span>
         </div>
       </div>
+      <div style={{height: 16}}>
+      </div>
+      <p>
+        <strong>Warning</strong>
+        <p>You must set a fixed width / height on the wrapper if you have <code>dynamicDirection="off"</code> to prevent the wrapper from collapsing during the animation stage when every cell (child) is positioned absolute.</p>
+      </p>
     </div>
   );
 };

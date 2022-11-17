@@ -74,7 +74,7 @@ describe('prop tests', () => {
       render(
         <ReactMixitup
           keys={[1, 2, 3]}
-          renderCell={undefined}
+          renderCell={undefined as any}
           dynamicDirection="off"
           transitionDuration={100}
         />

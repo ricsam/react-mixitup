@@ -1,0 +1,44 @@
+---
+title: FAQ
+sidebar_position: 4
+---
+
+## There is no animation
+
+Make sure you have a transition property on each cell that is rendered, e.g.
+
+```tsx
+renderCell={(key, style, ref) => (
+  <div
+    key={key}
+    ref={ref}
+    style={{
+      // You must set the transition property here!
+      transition: 'transform 300ms linear',
+      ...style
+    }}
+  >
+    {key}
+  </div>
+)}
+```
+
+## I get warnings about conflicting css properties
+
+If you see a warning like:
+
+`Warning: Updating a style property during rerender (margin) when a conflicting property is set (marginTop) can lead to styling bugs. To avoid this, don't mix shorthand and non-shorthand properties for the same value; instead, replace the shorthand with separate values.`
+
+During animation a few css properties are set. You can log the style arguments to renderCell and renderWrapper to debug which css styles might be conflicting.
+
+If you have code like
+
+```jsx
+<div style={{ marginTop: 16, ...style }}>`
+```
+
+you will get the warning. The solution is to write `margin: '16px 0 0 0', ...style` instead
+
+## My container disappears during the animation
+Try setting a fixed height and width to debug if that could be the issue. If you have `dynamicDirection="off"` then react-mixitup will not set any width nor height on the wrapper.
+During the animation stage all cells are positioned absolute and the parent container collapses unless it has a fixed height / width.

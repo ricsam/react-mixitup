@@ -6,18 +6,17 @@ export type Options = {
   disableTransition?: boolean;
   debugMeasure?: number;
   transitionDuration: number;
-  reMeasureAllPreviousFramesOnNewKeys?: boolean;
 };
 
 export const Example = ({ keys, options }: { keys: number[]; options: Options }) => {
   return (
     <ReactMixitup
+      ref={el => {}}
       keys={keys}
       dynamicDirection={options.dynamicDirection}
       disableTransition={options.disableTransition}
       debugMeasure={options.debugMeasure}
       transitionDuration={options.transitionDuration}
-      reMeasureAllPreviousFramesOnNewKeys={options.reMeasureAllPreviousFramesOnNewKeys}
       renderCell={(key, style, ref, stage, frame) => (
         <div
           key={key}

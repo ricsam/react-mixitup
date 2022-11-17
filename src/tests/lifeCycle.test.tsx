@@ -14,7 +14,7 @@ import * as utils from '../utils';
 import assert from 'assert';
 import { Options, Example } from './Example';
 
-let mockGenName: jest.SpyInstance<IFrame, [(string | number)[], number]>;
+let mockGenName: jest.SpyInstance<IFrame<string | number>, [(string | number)[], number]>;
 
 beforeEach(() => {
   let i = 0;
@@ -181,6 +181,7 @@ const expectAnimationCellStyles = (
   keysStore: KeysStore,
   frameIndex: number,
   stage: StageType.ANIMATE | StageType.COMMIT,
+  commitWhileAnimating: boolean,
   options: Options
 ) => {
   // should only be one element now
@@ -239,7 +240,9 @@ const expectAnimationCellStyles = (
     }
 
     expect(child.props.style).toEqual({
-      transform: `translate3d(${stage === StageType.ANIMATE ? diff : 0}px,0px,0px) scale(${scale})`,
+      transform: `translate3d(${
+        stage === StageType.ANIMATE || commitWhileAnimating ? diff : 0
+      }px,0px,0px) scale(${scale})`,
       left: includedFrames[0].indexOf(key) + 'px',
       margin: '0px',
       position: 'absolute',
@@ -248,13 +251,26 @@ const expectAnimationCellStyles = (
   });
 };
 
-const expectCommitStage = (root: Root, keys: KeysStore, frameIndex: number, options: Options) => {
+const expectCommitStage = (
+  root: Root,
+  keys: KeysStore,
+  frameIndex: number,
+  commitWhileAnimating: boolean,
+  options: Options
+) => {
   // should only be one element now
   assert(!Array.isArray(root));
 
   expect(root.props['id']).toBe('wrapper');
   expect(root.props['data-stage']).toBe(StageType.COMMIT);
-  expectAnimationCellStyles(root, keys, frameIndex, StageType.COMMIT, options);
+  expectAnimationCellStyles(
+    root,
+    keys,
+    frameIndex,
+    StageType.COMMIT,
+    commitWhileAnimating,
+    options
+  );
 };
 const expectAnimationStage = (
   root: Root,
@@ -266,7 +282,7 @@ const expectAnimationStage = (
 
   expect(root.props['id']).toBe('wrapper');
   expect(root.props['data-stage']).toBe(StageType.ANIMATE);
-  expectAnimationCellStyles(root, keys, frameIndex, StageType.ANIMATE, options);
+  expectAnimationCellStyles(root, keys, frameIndex, StageType.ANIMATE, false, options);
 };
 
 const withFakeTimers = (
@@ -345,7 +361,7 @@ const expectFullCycleToWork = (
 
     root = _root.toJSON() as Root;
 
-    expectCommitStage(root, keys, 2, options);
+    expectCommitStage(root, keys, 2, false, options);
   }
   // Move to animate stage
   act(() => {
@@ -448,8 +464,6 @@ const runMultipleAnimations = (options: Options) => {
 
     root = _root.toJSON() as Root;
 
-    expectCommitStage(root, keys, 2, options);
-
     const expectAnimateWhileMeasure = (frameIndexes: number[]) => {
       root = _root.toJSON() as Root;
 
@@ -495,8 +509,7 @@ const runMultipleAnimations = (options: Options) => {
       _root.update(<Example keys={keys[3]} options={options} />);
     });
     root = _root.toJSON() as Root;
-    // if reMeasureAllPreviousFramesOnNewKeys then all previous frames are measured, else just the latest 2
-    expectAnimateWhileMeasure(options.reMeasureAllPreviousFramesOnNewKeys ? [1, 2, 3] : [2, 3]);
+    expectAnimateWhileMeasure([2, 3]);
     expect(setTimeout).toHaveBeenCalledTimes(6);
     expect(setTimeout).toHaveBeenNthCalledWith(
       6,
@@ -509,7 +522,7 @@ const runMultipleAnimations = (options: Options) => {
       _root.update(<Example keys={keys[4]} options={options} />);
     });
     root = _root.toJSON() as Root;
-    expectAnimateWhileMeasure(options.reMeasureAllPreviousFramesOnNewKeys ? [1, 2, 3, 4] : [3, 4]);
+    expectAnimateWhileMeasure([3, 4]);
     expect(setTimeout).toHaveBeenCalledTimes(7);
     expect(setTimeout).toHaveBeenNthCalledWith(
       7,
@@ -526,7 +539,7 @@ const runMultipleAnimations = (options: Options) => {
 
     root = _root.toJSON() as Root;
 
-    expectCommitStage(root, keys, 4, options);
+    expectCommitStage(root, keys, 4, true, options);
     expect(setTimeout).toHaveBeenCalledTimes(9);
     expect(setTimeout).toHaveBeenNthCalledWith(
       8,
@@ -771,13 +784,13 @@ const registerDebugMeasureTest = (title: string, keys: KeysStore) => {
 
       // will now move to commit, but should move to stale if keys[1] === keys[4]
       act(() => {
-        jest.advanceTimersByTime(options.debugMeasure + TEST_COMPONENT_UPDATE_DELAY);
+        jest.advanceTimersByTime(options.debugMeasure! + TEST_COMPONENT_UPDATE_DELAY);
       });
 
       if (keys[1].join() !== keys[4].join()) {
         root = _root.toJSON() as Root;
 
-        expectCommitStage(root, keys, 4, options);
+        expectCommitStage(root, keys, 4, false, options);
         expect(setTimeout).toHaveBeenCalledTimes(6);
         expect(setTimeout).toHaveBeenNthCalledWith(
           4,
@@ -862,16 +875,5 @@ describe('debugMeasure', () => {
     2: [3, 2, 1],
     3: [2, 1, 3],
     4: [1, 2, 3] // same as frame 1
-  });
-});
-
-describe('reMeasureAllPreviousFramesOnNewKeys', () => {
-  it('should work', () => {
-    const options: Options = {
-      dynamicDirection: 'horizontal',
-      transitionDuration: 1000,
-      reMeasureAllPreviousFramesOnNewKeys: true
-    };
-    runMultipleAnimations(options);
   });
 });

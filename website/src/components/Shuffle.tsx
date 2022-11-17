@@ -1,22 +1,27 @@
 import React, { forwardRef } from 'react';
 import PropTypes from 'prop-types';
 import { shuffle, range, uniq } from 'lodash';
-import { ReactMixitup } from '../../../src/react-mixitup';
+import { ReactMixitup, StageType } from '../../../src/react-mixitup';
 import { useEffect } from 'react';
 import Link from '@docusaurus/Link';
+import styles from './shuffle.module.css';
+import clsx from 'clsx';
 
-// const getItems = () =>
-//   uniq(
-//     shuffle(
-//       range(Math.round(Math.random() * 40)).map(v => String(v + Math.round(Math.random() * 100)))
-//     )
-//   );
-const getItems = () => shuffle(range(9)).map(s => String(s));
+function getRandomInt(min: number, max: number) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min) + min); // The maximum is exclusive and the minimum is inclusive
+}
 
-const duration = 300;
+// const getItems = () => shuffle(range(88)).map(s => String(s));
 
 export const Shuffle = () => {
+  const [muchShuffle, setMuchShuffle] = React.useState(false);
+  const getItems = () =>
+    uniq(shuffle(range(getRandomInt(muchShuffle ? 0 : 48, 100)).map(v => String(v))));
+
   const [items, setItems] = React.useState(getItems());
+  const duration = 500;
   // const [items, setItems] = React.useState([1, 2]);
 
   const shuffleItems = () => {
@@ -26,14 +31,16 @@ export const Shuffle = () => {
   //   setItems(items[0] === 1 ? [2, 1] : [1, 2]);
   // };
 
-  // useEffect(() => {
-  //   const i = setInterval(() => {
-  //     shuffleItems();
-  //   }, 250);
-  //   return () => {
-  //     clearInterval(i);
-  //   }
-  // }, [])
+  useEffect(() => {
+    if (muchShuffle) {
+      const i = setInterval(() => {
+        shuffleItems();
+      }, 250);
+      return () => {
+        clearInterval(i);
+      };
+    }
+  }, [muchShuffle]);
 
   return (
     <div
@@ -51,43 +58,50 @@ export const Shuffle = () => {
         <button type="button" className="button button--primary" onClick={shuffleItems}>
           Shuffle
         </button>
-        <div style={{width: 16}}></div>
-        <Link to="/docs/intro" type="button" className="button button--secondary" onClick={shuffleItems}>
+        <div style={{ width: 16 }}></div>
+        <button
+          type="button"
+          className={clsx('button', muchShuffle ? 'button--danger' : 'button--secondary')}
+          onClick={() => {
+            if (!muchShuffle) {
+              shuffleItems();
+            }
+            setMuchShuffle(!muchShuffle);
+          }}
+        >
+          {muchShuffle ? 'Stop' : 'Shuffle a lot'}
+        </button>
+        <div style={{ width: 16 }}></div>
+        <Link
+          to="/docs/intro"
+          type="button"
+          className="button button--secondary"
+          onClick={shuffleItems}
+        >
           Get started
         </Link>
       </div>
       <ReactMixitup
         keys={items}
-        renderCell={(key, style, ref) => (
-          <div
-            key={key}
-            ref={ref}
-            style={{
-              padding: '8px',
-              transition: `transform ${duration}ms linear`,
-              ...style,
-            }}
-          >
+        renderCell={(key, style, ref, stage) => {
+          return (
             <div
-              className="square"
+              key={key}
+              ref={ref}
               style={{
-                width: 160,
-                height: 160,
-                color: 'black',
-                borderRadius: '4px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: 'rgba(0, 0, 0, 0.12) 0px 1px 3px, rgba(0, 0, 0, 0.24) 0px 1px 2px'
+                padding: '2px',
+                transition: `transform ${duration}ms linear`,
+                transformOrigin: 'center center',
+                ...style
               }}
             >
-              {key}
+              <div className={styles.square}>{key}</div>
             </div>
-          </div>
-        )}
+          );
+        }}
         dynamicDirection="vertical"
         transitionDuration={duration}
-        renderWrapper={(style, ref, children) => {
+        renderWrapper={(style, ref, children, stage) => {
           return (
             <div
               style={{
@@ -95,12 +109,15 @@ export const Shuffle = () => {
                 display: 'flex',
                 flexWrap: 'wrap',
                 alignItems: 'flex-start',
+                alignContent: 'flex-start',
                 justifyContent: 'center',
                 width: '75%',
                 margin: 'auto',
                 padding: '16px',
                 maxWidth: '560px',
-                ...style
+                borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
+                ...style,
+                // height: 400
               }}
               ref={ref}
             >

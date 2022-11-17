@@ -1,0 +1,30 @@
+@keyframes easeIn {
+  from {
+    opacity: 0.8;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.scale {
+  transform: scale(0.8);
+}
+
+.ease-in {
+  animation-duration: 300ms;
+  animation-name: easeIn;
+  animation-iteration-count: 1;
+}
+
+.square {
+  width: 32px;
+  height: 32px;
+  color: white;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  background: var(--ifm-color-primary-light);
+  justify-content: center;
+}

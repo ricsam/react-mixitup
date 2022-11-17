@@ -6,13 +6,18 @@ sidebar_position: 1
 
 Let's discover **react-mixitup in less than 5 minutes**.
 
+[![GitHub Repo stars](https://img.shields.io/github/stars/ricsam/react-mixitup?style=social)](https://github.com/ricsam/react-mixitup)
+
 ## Getting Started
 
 Install react-mixitup
 
 ```sh
-npm install react-mixitup
+npm install --save react-mixitup
 ```
+
+[![npm](https://img.shields.io/npm/v/react-mixitup)](https://www.npmjs.com/package/react-mixitup)
+[![npm](https://img.shields.io/npm/dw/react-mixitup?label=npm%20downloads)](https://www.npmjs.com/package/react-mixitup)
 
 ### What you'll need
 
@@ -22,25 +27,19 @@ npm install react-mixitup
 
 ## Example
 
-
-:::note Terminology
-
-The naming used in react-mixitup is based on the use case of rendering a table.
-
-See [Terminology](./terminology).
-
-:::
-
-
 ```tsx live
+// import { ReactMixitup } from 'react-mixitup';
+
 function Example() {
-  const [keys, setKeys] = React.useState([1,2,3]);
+  const [keys, setKeys] = React.useState([1, 2, 3]);
 
   return (
     <div style={{ height: 64 }}>
-      <button onClick={() => {
-        setKeys(keys[0] === 1 ? [3,2,1] : [1,2,3]);
-      }}>
+      <button
+        onClick={() => {
+          setKeys(keys[0] === 1 ? [3, 2, 1] : [1, 2, 3]);
+        }}
+      >
         Mixitup
       </button>
       <ReactMixitup
@@ -50,8 +49,9 @@ function Example() {
             key={key}
             ref={ref}
             style={{
+              // You must set the transition property here!
               transition: 'transform 300ms linear',
-              ...style,
+              ...style
             }}
           >
             {key}
@@ -75,6 +75,22 @@ function Example() {
         transitionDuration={300}
       />
     </div>
-  )
+  );
 }
 ```
+
+:::tip
+You can live edit the examples in this documentation.
+:::
+
+## What is next?
+
+Explore the [guide](./guide) and the [FAQ](./faq).
+
+:::note Terminology
+
+The naming used in react-mixitup is based on the use case of rendering a table.
+
+See [Terminology](./terminology).
+
+:::

@@ -72,6 +72,7 @@ export enum StageType {
    */
   ANIMATE = 'ANIMATE'
   /**
+   * // DEPRECATED, see note bellow
    * ANIMATE_MEASURE
    *
    * If stage is ANIMATE, and the keys are updated then the next stage will be ANIMATE_MEASURE.
@@ -87,6 +88,7 @@ export enum StageType {
   // replaced by MEASURE where stage.whileAnimating = true;
   // ANIMATE_MEASURE = 'ANIMATE_MEASURE',
   /**
+   * // DEPRECATED, see note bellow
    * ANIMATE_COMMIT
    *
    * If stage is ANIMATE_MEASURE then the next stage will be ANIMATE_COMMIT.
@@ -108,7 +110,7 @@ export enum StageType {
  *
  * Holds information about the keys of rendered cells
  */
-export interface IFrame {
+export interface IFrame<RMKey extends string | number> {
   /**
    * The height of the container when all cells are rendered.
    */
@@ -120,7 +122,7 @@ export interface IFrame {
   /**
    * The keys which should be rendered
    */
-  keys: (string | number)[];
+  keys: RMKey[];
   /**
    * The positions of each cell
    */
@@ -173,11 +175,11 @@ export interface IWrapperStyle {
  *
  * The props accepted by ReactMixitup
  */
-interface IProps {
+interface IProps<RMKey extends string | number> {
   /**
-   * keys should be a unique list of strings.
+   * keys should be a unique list of strings or numbers.
    */
-  keys: (string | number)[];
+  keys: RMKey[];
   /**
    * MUST return a react node.
    *
@@ -191,11 +193,11 @@ interface IProps {
    * ReactMixitup is able to measure the position of the cell.
    */
   renderCell: (
-    key: string | number,
+    key: RMKey,
     style: ICellStyle,
     ref: React.Ref<any>,
     stage: StageType,
-    frame: IFrame,
+    frame: IFrame<RMKey>,
     activeFrame: boolean
   ) => React.ReactNode | JSX.Element;
 
@@ -214,7 +216,7 @@ interface IProps {
     ref: React.Ref<any>,
     cells: JSX.Element[],
     stage: StageType,
-    frame: IFrame,
+    frame: IFrame<RMKey>,
     activeFrame: boolean
   ) => React.ReactNode | JSX.Element;
 
@@ -228,14 +230,15 @@ interface IProps {
    */
   dynamicDirection: 'horizontal' | 'vertical' | 'off';
 
+  /**
+   * How long is the transition? Should be the same as the transition-duration css property value set on each cell
+   */
   transitionDuration: number;
 
-  // default false. If true will remeasure all previous frames.
-  // only useful if resizing container while animation is slow and multiple animations are queued.
-  reMeasureAllPreviousFramesOnNewKeys?: boolean;
-
-  // default undefined. if number will render the measure container, and keep it for debugMeasure ms
-  // before removing
+  /**
+   * Default undefined. If number will render the measure container, and keep it for debugMeasure ms
+   * before removing
+   */
   debugMeasure?: number;
 }
 
@@ -271,7 +274,10 @@ export const MixitupFragment = ({
  * The style is used to update the height of the wrapping container.
  * By setting the transition: height style property on the wrapper the height can be animated.
  */
-export type RenderWrapper = Exclude<IProps['renderWrapper'], undefined>;
+export type RenderWrapper<RMKey extends string | number> = Exclude<
+  IProps<RMKey>['renderWrapper'],
+  undefined
+>;
 
 /**
  * MUST return a react node.
@@ -285,12 +291,15 @@ export type RenderWrapper = Exclude<IProps['renderWrapper'], undefined>;
  * The ref MUST also be attached to the returned element so
  * ReactMixitup is able to measure the position of the cell.
  */
-export type RenderCell = Exclude<IProps['renderCell'], undefined>;
+export type RenderCell<RMKey extends string | number> = Exclude<
+  IProps<RMKey>['renderCell'],
+  undefined
+>;
 
 /**
  * Default renderer
  */
-const defaultRenderWrapper: RenderWrapper = (style, ref, cells) => {
+const defaultRenderWrapper: RenderWrapper<string | number> = (style, ref, cells) => {
   return (
     <div style={style} ref={ref}>
       {cells}
@@ -300,10 +309,10 @@ const defaultRenderWrapper: RenderWrapper = (style, ref, cells) => {
 
 export const TEST_COMPONENT_UPDATE_DELAY = 100;
 
-type Stage =
+type Stage<RMKey extends string | number> =
   | {
       type: StageType.MEASURE;
-      frameToMeasure: IFrame;
+      frameToMeasure: IFrame<RMKey>;
       whileAnimating: boolean;
     }
   | {
@@ -315,15 +324,15 @@ type Stage =
     }
   | {
       type: StageType.STALE;
-      frame: IFrame;
+      frame: IFrame<RMKey>;
     };
 
-const NotifyAboutRendered = ({
+const NotifyAboutRendered = <RMKey extends string | number>({
   children,
   frame
 }: {
   children: React.ReactNode | JSX.Element;
-  frame: IFrame;
+  frame: IFrame<RMKey>;
 }) => {
   React.useLayoutEffect(() => {
     frame.hasBeenMeasured = true;
@@ -347,464 +356,534 @@ const debug = (...msg: any[]) => {
   }
 };
 
-export const ReactMixitup = React.memo(
-  React.forwardRef(
-    (props: IProps, outerBoundRef: React.Ref<HTMLDivElement>): JSX.Element | null => {
-      const {
-        keys,
-        renderCell,
-        renderWrapper = defaultRenderWrapper,
-        disableTransition: disableTransitionProp,
-        dynamicDirection,
-        transitionDuration
-      } = props;
+export function ReactMixitupComponent<RMKey extends string | number>(
+  props: IProps<RMKey>,
+  outerBoundRef: React.Ref<HTMLDivElement>
+): JSX.Element | null {
+  const {
+    keys,
+    renderCell,
+    renderWrapper = defaultRenderWrapper,
+    disableTransition: disableTransitionProp,
+    dynamicDirection,
+    transitionDuration
+  } = props;
 
-      const disableTransition = !!disableTransitionProp || transitionDuration === 0 || false;
+  const disableTransition = !!disableTransitionProp || transitionDuration === 0 || false;
 
-      if (!keys) {
-        throw new Error('Invalid keys: keys must be provided');
+  if (!keys) {
+    throw new Error('Invalid keys: keys must be provided');
+  }
+
+  if (new Set(keys).size !== keys.length) {
+    throw new Error('Invalid keys: every key must be unique');
+  }
+
+  if (typeof transitionDuration !== 'number' || transitionDuration < 0) {
+    throw new Error('Invalid transitionDuration: transition duration must be a number > 0');
+  }
+
+  if (!renderCell || typeof renderCell !== 'function') {
+    throw new Error('Invalid renderCell: must be a function');
+  }
+
+  if (!renderWrapper || typeof renderWrapper !== 'function') {
+    throw new Error('Invalid renderWrapper: must be a function');
+  }
+
+  if (props.debugMeasure && typeof props.debugMeasure !== 'number') {
+    throw new Error('Invalid debugMeasure: must be a number');
+  }
+
+  const indexRef = React.useRef(0);
+
+  const nextHash = getKeysHash(keys);
+
+  const refs = React.useRef<{
+    frames: IFrame<RMKey>[];
+    persistedElement: JSX.Element | null;
+    hash: undefined | string;
+    stage: Stage<RMKey>;
+  }>(undefined as any);
+
+  if (!refs.current) {
+    const frame = createFrame(keys, indexRef.current++);
+    refs.current = {
+      frames: [frame],
+      persistedElement: null,
+      hash: undefined,
+      stage: { type: StageType.STALE, frame }
+    };
+  }
+
+  const [, _update] = React.useState(0);
+
+  const hasUnmounted = React.useRef(false);
+  React.useEffect(
+    () => () => {
+      hasUnmounted.current = true;
+    },
+    []
+  );
+
+  const update = () => {
+    setTimeout(
+      () => {
+        if (!hasUnmounted.current) {
+          _update(i => i + 1);
+        }
+      },
+      processEnv('NODE_ENV') === 'test' ? TEST_COMPONENT_UPDATE_DELAY : 1
+    );
+  };
+
+  function goToStale(frame: IFrame<RMKey>) {
+    debug('go to STALE');
+    refs.current.stage = {
+      type: StageType.STALE,
+      frame
+    };
+    // stale should always only have 1 frame
+    refs.current.frames = [frame];
+
+    update();
+  }
+
+  React.useEffect(() => {
+    const goToStaleOrNext = (cb: () => void) => {
+      if (!props.debugMeasure) {
+        cb();
+        return;
       }
 
-      if (new Set(keys).size !== keys.length) {
-        throw new Error('Invalid keys: every key must be unique');
+      // only use case is when running with debugMeasure
+      // then you can update many times while in commit
+      // and end up at with the same keys as in the start
+      const lastFrame = refs.current.frames[refs.current.frames.length - 1];
+      if (refs.current.frames[0].hash === lastFrame.hash) {
+        debug('due to last frame being the same as first key we go straight back to STALE');
+        goToStale(lastFrame);
+      } else {
+        cb();
       }
-
-      if (typeof transitionDuration !== 'number' || transitionDuration < 0) {
-        throw new Error('Invalid transitionDuration: transition duration must be a number > 0');
-      }
-
-      if (!renderCell || typeof renderCell !== 'function') {
-        throw new Error('Invalid renderCell: must be a function');
-      }
-
-      if (!renderWrapper || typeof renderWrapper !== 'function') {
-        throw new Error('Invalid renderWrapper: must be a function');
-      }
-
-      if (props.debugMeasure && typeof props.debugMeasure !== 'number') {
-        throw new Error('Invalid debugMeasure: must be a number');
-      }
-
-      const indexRef = React.useRef(0);
-
-      const nextHash = getKeysHash(keys);
-
-      const refs = React.useRef<{
-        frames: IFrame[];
-        persistedElement: JSX.Element | null;
-        hash: undefined | string;
-        stage: Stage;
-      }>(undefined as any);
-
-      if (!refs.current) {
-        const frame = createFrame(keys, indexRef.current++);
-        refs.current = {
-          frames: [frame],
-          persistedElement: null,
-          hash: undefined,
-          stage: { type: StageType.STALE, frame }
-        };
-      }
-
-      const [, _update] = React.useState(0);
-
-      const hasUnmounted = React.useRef(false);
-      React.useEffect(
-        () => () => {
-          hasUnmounted.current = true;
-        },
-        []
-      );
-
-      const update = () => {
-        setTimeout(
-          () => {
-            if (!hasUnmounted.current) {
-              _update(i => i + 1);
-            }
-          },
-          processEnv('NODE_ENV') === 'test' ? TEST_COMPONENT_UPDATE_DELAY : 1
-        );
-      };
-
-      function goToStale(frame: IFrame) {
-        debug('go to STALE');
+    };
+    const goToAnimate = () => {
+      // from commit or measure
+      goToStaleOrNext(() => {
         refs.current.stage = {
-          type: StageType.STALE,
-          frame
+          type: StageType.ANIMATE
         };
-        // stale should always only have 1 frame
-        refs.current.frames = [frame];
-
-        update();
-      }
-
-      React.useEffect(() => {
-        const goToStaleOrNext = (cb: () => void) => {
-          if (!props.debugMeasure) {
-            cb();
-            return;
-          }
-
-          // only use case is when running with debugMeasure
-          // then you can update many times while in commit
-          // and end up at with the same keys as in the start
-          const lastFrame = refs.current.frames[refs.current.frames.length - 1];
-          if (refs.current.frames[0].hash === lastFrame.hash) {
-            debug('due to last frame being the same as first key we go straight back to STALE');
-            goToStale(lastFrame);
-          } else {
-            cb();
-          }
-        };
-        const goToAnimate = () => {
-          // from commit or measure
-          goToStaleOrNext(() => {
-            refs.current.stage = {
-              type: StageType.ANIMATE
-            };
-            if (processEnv('NODE_ENV') === 'test') {
-              setTimeout(() => {
-                update();
-              }, TEST_COMPONENT_UPDATE_DELAY);
-            } else {
-              window.requestAnimationFrame(() => {
-                update();
-              });
-            }
-          });
-        };
-        const goToCommit = (whileAnimating: boolean) => {
-          // from measure
-          goToStaleOrNext(() => {
-            refs.current.stage = {
-              type: StageType.COMMIT,
-              whileAnimating
-            };
+        if (processEnv('NODE_ENV') === 'test') {
+          setTimeout(() => {
+            update();
+          }, TEST_COMPONENT_UPDATE_DELAY);
+        } else {
+          window.requestAnimationFrame(() => {
             update();
           });
-        };
-        const maybeDelay = (cb: () => void) => {
-          if (props.debugMeasure) {
-            const t = setTimeout(() => {
-              cb();
-            }, props.debugMeasure);
-            return () => {
-              clearTimeout(t);
-            };
-          }
-          cb();
-        };
-        if (refs.current.stage.type === StageType.MEASURE) {
-          if (dynamicDirection === 'off') {
-            // skip COMMIT phase, go straight to ANIMATE
-            return maybeDelay(() => goToAnimate());
-          }
-          const whileAnimating = refs.current.stage.whileAnimating;
-          return maybeDelay(() => goToCommit(whileAnimating));
-        }
-
-        if (refs.current.stage.type === StageType.COMMIT) {
-          goToAnimate();
         }
       });
-
-      if (refs.current.hash === undefined) {
-        // first render
-        refs.current.hash = nextHash;
-      }
-
-      if (refs.current.hash !== nextHash) {
-        refs.current.hash = nextHash;
-        const frame = createFrame(keys, indexRef.current++);
-        if (disableTransition) {
-          refs.current.frames.splice(0, refs.current.frames.length, frame);
-          refs.current.stage = {
-            type: StageType.STALE,
-            frame
-          };
-        } else {
-          refs.current.frames.push(frame);
-          const whileAnimating =
-            'whileAnimating' in refs.current.stage
-              ? refs.current.stage.whileAnimating
-              : refs.current.stage.type === StageType.ANIMATE;
-          refs.current.stage = {
-            type: StageType.MEASURE,
-            frameToMeasure: frame,
-            whileAnimating
-          };
-        }
-      }
-
-      const measureGridItems = (frame: IFrame, key: string | number, el: HTMLElement) => {
-        const pos = {
-          x: el.offsetLeft,
-          y: el.offsetTop
+    };
+    const goToCommit = (whileAnimating: boolean) => {
+      // from measure
+      goToStaleOrNext(() => {
+        refs.current.stage = {
+          type: StageType.COMMIT,
+          whileAnimating
         };
-        frame.positions[key] = pos;
-      };
+        update();
+      });
+    };
+    const maybeDelay = (cb: () => void) => {
+      if (props.debugMeasure) {
+        const t = setTimeout(() => {
+          cb();
+        }, props.debugMeasure);
+        return () => {
+          clearTimeout(t);
+        };
+      }
+      cb();
+    };
+    if (refs.current.stage.type === StageType.MEASURE) {
+      if (dynamicDirection === 'off') {
+        // skip COMMIT phase, go straight to ANIMATE
+        return maybeDelay(() => goToAnimate());
+      }
+      const whileAnimating = refs.current.stage.whileAnimating;
+      return maybeDelay(() => goToCommit(whileAnimating));
+    }
 
-      const wrapperMeasureContainerSize = (frame: IFrame, el: HTMLElement | null) => {
-        if (!el) {
+    if (refs.current.stage.type === StageType.COMMIT) {
+      goToAnimate();
+    }
+  });
+
+  if (refs.current.hash === undefined) {
+    // first render
+    refs.current.hash = nextHash;
+  }
+
+  if (refs.current.hash !== nextHash) {
+    refs.current.hash = nextHash;
+    const frame = createFrame(keys, indexRef.current++);
+    if (disableTransition) {
+      refs.current.frames.splice(0, refs.current.frames.length, frame);
+      refs.current.stage = {
+        type: StageType.STALE,
+        frame
+      };
+    } else {
+      refs.current.frames.push(frame);
+      const whileAnimating =
+        'whileAnimating' in refs.current.stage
+          ? refs.current.stage.whileAnimating
+          : refs.current.stage.type === StageType.ANIMATE;
+      refs.current.stage = {
+        type: StageType.MEASURE,
+        frameToMeasure: frame,
+        whileAnimating
+      };
+    }
+  }
+
+  const measureGridItems = (frame: IFrame<RMKey>, key: string | number, el: HTMLElement) => {
+    const pos = {
+      x: el.offsetLeft,
+      y: el.offsetTop
+    };
+    frame.positions[key] = pos;
+  };
+
+  const wrapperMeasureContainerSize = (frame: IFrame<RMKey>, el: HTMLElement | null) => {
+    if (!el) {
+      return;
+    }
+    const h = el.offsetHeight;
+    const w = el.offsetWidth;
+    frame.containerHeight = h;
+    frame.containerWidth = w;
+  };
+
+  const cells = ({
+    ref,
+    style,
+    keys,
+    stageType,
+    activeFrame
+  }: {
+    keys: { key: RMKey; frame: IFrame<RMKey> }[];
+    ref: (key: RMKey, el: HTMLElement) => void;
+    style: (key: RMKey) => ICellStyle;
+    stageType: StageType;
+    activeFrame: boolean;
+  }) => {
+    const makeRef = (key: RMKey) => {
+      return (el: HTMLElement | null) => {
+        if (el) {
+          ref(key, el);
+        }
+      };
+    };
+
+    const cells = keys.map(({ key, frame }) => {
+      return (
+        <React.Fragment key={key}>
+          {renderCell(key, style(key), makeRef(key), stageType, frame, activeFrame)}
+        </React.Fragment>
+      );
+    });
+
+    return cells;
+  };
+
+  const measureFrame = (frame: IFrame<RMKey>, activeFrame: boolean) => (
+    <NotifyAboutRendered frame={frame}>
+      {renderWrapper(
+        props.debugMeasure
+          ? {
+              position: 'absolute'
+            }
+          : {
+              position: 'absolute',
+              visibility: 'hidden',
+              zIndex: -1
+            },
+        el => {
+          wrapperMeasureContainerSize(frame, el);
+          if (outerBoundRef) {
+            if (typeof outerBoundRef === 'function') {
+              outerBoundRef(el);
+            } else if ('current' in outerBoundRef) {
+              try {
+                (outerBoundRef as React.MutableRefObject<HTMLDivElement>).current = el;
+              } catch (err) {
+                // ignore "Cannot assign to read only property..." errors
+              }
+            }
+          }
+        },
+        cells({
+          ref: (key, el) => {
+            measureGridItems(frame, key, el);
+          },
+          keys: frame.keys.map(key => ({ key, frame })),
+          style: staleStyle,
+          stageType: StageType.MEASURE,
+          activeFrame
+        }),
+        StageType.MEASURE,
+        frame,
+        activeFrame
+      )}
+    </NotifyAboutRendered>
+  );
+
+  const onEndOfTransition = () => {
+    const frame = refs.current.frames[refs.current.frames.length - 1];
+    debug('end of transition');
+    goToStale(frame);
+  };
+
+  React.useEffect(() => {
+    if (refs.current.stage.type === StageType.ANIMATE) {
+      debug('set timeout');
+      const timeout = setTimeout(() => {
+        onEndOfTransition();
+      }, transitionDuration);
+
+      return () => {
+        debug('clear timeout');
+        clearTimeout(timeout);
+      };
+    }
+  });
+
+  const staleStyle = (): ICellStyle => ({
+    transition: '0s 0s all ease',
+    transform: 'none'
+  });
+
+  debug('current stage', refs.current.stage.type);
+
+  // BEGIN RENDER
+
+  // The keys used on the React.Fragments are there to assist React in preseving the DOM tree nodes and
+  // prevent unmounting of components which interupts animation
+
+  // The hierarchies:
+  // root-level > visible-level > wrapper-level > renderWrapper
+  //      ↳     > hidden-level > [key] > wrapper-level > NotifyAboutRendered > renderWrapper
+
+  /**
+   * staleFrame
+   *
+   * Renders the cells without any modifications
+   *
+   * @param frame IFrame
+   * @returns React.ReactNode | JSX.Element
+   */
+  const staleFrame = (frame: IFrame<RMKey>) => (
+    <MixitupFragment key={DOMLevel.WRAPPER} level={DOMLevel.WRAPPER}>
+      {renderWrapper(
+        {},
+        () => {},
+        cells({
+          ref: () => {},
+          keys: frame.keys.map(key => ({ key, frame })),
+          style: staleStyle,
+          stageType: StageType.STALE,
+          activeFrame: true
+        }),
+        StageType.STALE,
+        frame,
+        true
+      )}
+    </MixitupFragment>
+  );
+
+  // If transitions are disabled, always render the staleFrame node
+  if (disableTransition) {
+    return (
+      <MixitupFragment key={DOMLevel.ROOT} level={DOMLevel.ROOT}>
+        <MixitupFragment key={DOMLevel.VISIBLE} level={DOMLevel.VISIBLE}>
+          {staleFrame(refs.current.frames[refs.current.frames.length - 1])}
+        </MixitupFragment>
+      </MixitupFragment>
+    );
+  }
+
+  /**
+   * getKeyFrameParticipation
+   *
+   * returns the frame indices where a key is present
+   *
+   * @param frames IFrame[]
+   * @param key string
+   * @returns number[]
+   */
+  const getKeyFrameParticipation = (frames: IFrame<RMKey>[], key: RMKey): number[] => {
+    const indexes = [];
+    for (let i = frames.length - 1; i >= 0; i -= 1) {
+      const frame = frames[i];
+      if (frame.keys.includes(key)) {
+        indexes.push(i);
+      }
+    }
+    return indexes;
+  };
+
+  const animatedCellStyle = (
+    type: StageType.ANIMATE | StageType.COMMIT,
+    key: RMKey,
+    frames: IFrame<RMKey>[],
+    commitWhileAnimating: boolean
+  ): ICellStyle => {
+    let z = 1;
+
+    const indexes = getKeyFrameParticipation(frames, key);
+    if (indexes.length === 0) {
+      throw new Error('something went wrong in the lib');
+    }
+
+    const { x: xTarget, y: yTarget } = frames[indexes[0]].positions[key];
+    const { x: xSource, y: ySource } = frames[indexes[indexes.length - 1]].positions[key];
+
+    const style: ICellStyle = {
+      position: 'absolute',
+      top: '0px',
+      left: '0px',
+      margin: '0px'
+    };
+
+    /* will be added */
+    // Last frame has the key.
+    // The key has not been added before.
+    // Type is commit
+    if (
+      frames[frames.length - 1].keys.includes(key) &&
+      indexes.length === 1 &&
+      type === StageType.COMMIT
+    ) {
+      // scale from 0 -> 1 when going from COMMIT -> ANIMATE
+      z = 0;
+    }
+
+    /* will be removed */
+    if (!frames[frames.length - 1].keys.includes(key)) {
+      // simply remove
+      z = 0;
+    }
+
+    const xDiff = xTarget - xSource;
+    const yDiff = yTarget - ySource;
+
+    style.left = xSource + 'px';
+    style.top = ySource + 'px';
+
+    if (type === StageType.COMMIT && !commitWhileAnimating) {
+      // if (type === StageType.COMMIT) {
+      style.transform = `translate3d(${[0, 0, 0].join('px,')}px) scale(${z})`;
+    } else {
+      style.transform = `translate3d(${[xDiff, yDiff, 0].join('px,')}px) scale(${z})`;
+    }
+    return style;
+  };
+
+  const getAllUniqueKeysForFrames = (frames: IFrame<RMKey>[]) => {
+    const keys: { frame: IFrame<RMKey>; key: RMKey }[] = [];
+    const keysSet = new Set<RMKey>();
+    frames.forEach(frame => {
+      frame.keys.forEach(key => {
+        if (keysSet.has(key)) {
           return;
         }
-        const h = el.offsetHeight;
-        const w = el.offsetWidth;
-        frame.containerHeight = h;
-        frame.containerWidth = w;
-      };
+        keysSet.add(key);
+        keys.push({ frame, key });
+      });
+    });
+    return keys;
+  };
 
-      const cells = ({
-        ref,
-        style,
-        keys,
-        stageType,
-        activeFrame
-      }: {
-        keys: { key: string | number; frame: IFrame }[];
-        ref: (key: string | number, el: HTMLElement) => void;
-        style: (key: string | number) => ICellStyle;
-        stageType: StageType;
-        activeFrame: boolean;
-      }) => {
-        const makeRef = (key: string | number) => {
-          return (el: HTMLElement | null) => {
-            if (el) {
-              ref(key, el);
-            }
-          };
-        };
-
-        const cells = keys.map(({ key, frame }) => {
-          return (
-            <React.Fragment key={key}>
-              {renderCell(key, style(key), makeRef(key), stageType, frame, activeFrame)}
-            </React.Fragment>
-          );
-        });
-
-        return cells;
-      };
-
-      const measureFrame = (frame: IFrame, activeFrame: boolean) => (
-        <NotifyAboutRendered frame={frame}>
-          {renderWrapper(
-            props.debugMeasure
-              ? {
-                  position: 'absolute'
-                }
-              : {
-                  position: 'absolute',
-                  visibility: 'hidden',
-                  zIndex: -1
-                },
-            el => {
-              wrapperMeasureContainerSize(frame, el);
+  /**
+   * animatingFrame
+   *
+   * Returns the nodes which renders while animating.
+   * Translate all elements to ther corresponding static location in the latest frame
+   *
+   * @param frames IFrame[]
+   * @returns JSX.Element
+   */
+  const animatingFrame = (frames: IFrame<RMKey>[]) => {
+    const lastFrame = frames[frames.length - 1];
+    const height = lastFrame.containerHeight!;
+    const width = lastFrame.containerWidth!;
+    const styles: IWrapperStyle = {
+      position: 'relative'
+    };
+    if (dynamicDirection === 'horizontal') {
+      styles.width = width;
+    } else if (dynamicDirection === 'vertical') {
+      styles.height = height;
+    }
+    const keys = getAllUniqueKeysForFrames(frames);
+    return (
+      <MixitupFragment key={DOMLevel.WRAPPER} level={DOMLevel.WRAPPER}>
+        {renderWrapper(
+          {
+            ...styles
+          },
+          () => {},
+          cells({
+            ref: (key, el) => {},
+            keys: keys,
+            style: key => {
+              return animatedCellStyle(StageType.ANIMATE, key, frames, false);
             },
-            cells({
-              ref: (key, el) => {
-                measureGridItems(frame, key, el);
-              },
-              keys: frame.keys.map(key => ({ key, frame })),
-              style: staleStyle,
-              stageType: StageType.MEASURE,
-              activeFrame
-            }),
-            StageType.MEASURE,
-            frame,
-            activeFrame
-          )}
-        </NotifyAboutRendered>
-      );
+            stageType: StageType.ANIMATE,
+            activeFrame: true
+          }),
+          StageType.ANIMATE,
+          lastFrame,
+          true
+        )}
+      </MixitupFragment>
+    );
+  };
 
-      const onEndOfTransition = () => {
-        const frame = refs.current.frames[refs.current.frames.length - 1];
-        debug('end of transition');
-        goToStale(frame);
-      };
-
-      React.useEffect(() => {
-        if (refs.current.stage.type === StageType.ANIMATE) {
-          debug('set timeout');
-          const timeout = setTimeout(() => {
-            onEndOfTransition();
-          }, transitionDuration);
-
-          return () => {
-            debug('clear timeout');
-            clearTimeout(timeout);
-          };
-        }
-      });
-
-      const staleStyle = (): ICellStyle => ({
-        transition: '0s 0s all ease',
-        transform: 'none'
-      });
-
-      debug('current stage', refs.current.stage.type);
-
-      // BEGIN RENDER
-
-      // The keys used on the React.Fragments are there to assist React in preseving the DOM tree nodes and
-      // prevent unmounting of components which interupts animation
-
-      // The hierarchies:
-      // root-level > visible-level > wrapper-level > renderWrapper
-      //      ↳     > hidden-level > [key] > wrapper-level > NotifyAboutRendered > renderWrapper
-
-      /**
-       * staleFrame
-       *
-       * Renders the cells without any modifications
-       *
-       * @param frame IFrame
-       * @returns React.ReactNode | JSX.Element
-       */
-      const staleFrame = (frame: IFrame) => (
-        <MixitupFragment key={DOMLevel.WRAPPER} level={DOMLevel.WRAPPER}>
-          {renderWrapper(
-            {},
-            () => {},
-            cells({
-              ref: () => {},
-              keys: frame.keys.map(key => ({ key, frame })),
-              style: staleStyle,
-              stageType: StageType.STALE,
-              activeFrame: true
-            }),
-            StageType.STALE,
-            frame,
-            true
-          )}
+  // When animating render the animatingFrame
+  if (refs.current.stage.type === StageType.ANIMATE) {
+    return (
+      <MixitupFragment key={DOMLevel.ROOT} level={DOMLevel.ROOT}>
+        <MixitupFragment key={DOMLevel.VISIBLE} level={DOMLevel.VISIBLE}>
+          {animatingFrame(refs.current.frames)}
         </MixitupFragment>
-      );
+      </MixitupFragment>
+    );
+  }
 
-      // If transitions are disabled, always render the staleFrame node
-      if (disableTransition) {
-        return (
-          <MixitupFragment key={DOMLevel.ROOT} level={DOMLevel.ROOT}>
-            <MixitupFragment key={DOMLevel.VISIBLE} level={DOMLevel.VISIBLE}>
-              {staleFrame(refs.current.frames[refs.current.frames.length - 1])}
-            </MixitupFragment>
-          </MixitupFragment>
-        );
-      }
+  // Commit will translate all elements to their corresponding static location of the previous frame.
+  if (refs.current.stage.type === StageType.COMMIT) {
+    const stage = refs.current.stage;
+    let sizeFrame = refs.current.frames[refs.current.frames.length - 2];
+    if (stage.whileAnimating) {
+      sizeFrame = refs.current.frames[refs.current.frames.length - 1];
+    }
+    const height = sizeFrame.containerHeight!;
+    const width = sizeFrame.containerWidth!;
+    const styles: IWrapperStyle = {
+      position: 'relative'
+    };
+    if (dynamicDirection === 'horizontal') {
+      styles.width = width;
+    } else if (dynamicDirection === 'vertical') {
+      styles.height = height;
+    }
+    const keys = getAllUniqueKeysForFrames(refs.current.frames);
 
-      /**
-       * getKeyFrameParticipation
-       *
-       * returns the frame indices where a key is present
-       *
-       * @param frames IFrame[]
-       * @param key string
-       * @returns number[]
-       */
-      const getKeyFrameParticipation = (frames: IFrame[], key: string | number): number[] => {
-        const indexes = [];
-        for (let i = frames.length - 1; i >= 0; i -= 1) {
-          const frame = frames[i];
-          if (frame.keys.includes(key)) {
-            indexes.push(i);
-          }
-        }
-        return indexes;
-      };
-
-      const animatedCellStyle = (
-        type: StageType.ANIMATE | StageType.COMMIT,
-        key: string | number,
-        frames: IFrame[]
-      ): ICellStyle => {
-        let z = 1;
-
-        const indexes = getKeyFrameParticipation(frames, key);
-        if (indexes.length === 0) {
-          throw new Error('something went wrong in the lib');
-        }
-
-        const { x: xTarget, y: yTarget } = frames[indexes[0]].positions[key];
-        const { x: xSource, y: ySource } = frames[indexes[indexes.length - 1]].positions[key];
-
-        const style: ICellStyle = {
-          position: 'absolute',
-          top: '0px',
-          left: '0px',
-          margin: '0px'
-        };
-
-        /* will be added */
-        // Last frame has the key.
-        // The key has not been added before.
-        // Type is commit
-        if (
-          frames[frames.length - 1].keys.includes(key) &&
-          indexes.length === 1 &&
-          type === StageType.COMMIT
-        ) {
-          // scale from 0 -> 1 when going from COMMIT -> ANIMATE
-          z = 0;
-        }
-
-        /* will be removed */
-        if (!frames[frames.length - 1].keys.includes(key)) {
-          // simply remove
-          z = 0;
-        }
-
-        const xDiff = xTarget - xSource;
-        const yDiff = yTarget - ySource;
-
-        style.left = xSource + 'px';
-        style.top = ySource + 'px';
-
-        if (type === StageType.COMMIT) {
-          style.transform = `translate3d(${[0, 0, 0].join('px,')}px) scale(${z})`;
-        } else {
-          style.transform = `translate3d(${[xDiff, yDiff, 0].join('px,')}px) scale(${z})`;
-        }
-        return style;
-      };
-
-      const getAllUniqueKeysForFrames = (frames: IFrame[]) => {
-        const keys: { frame: IFrame; key: string | number }[] = [];
-        const keysSet = new Set<string | number>();
-        frames.forEach(frame => {
-          frame.keys.forEach(key => {
-            if (keysSet.has(key)) {
-              return;
-            }
-            keysSet.add(key);
-            keys.push({ frame, key });
-          });
-        });
-        return keys;
-      };
-
-      /**
-       * animatingFrame
-       *
-       * Returns the nodes which renders while animating.
-       * Translate all elements to ther corresponding static location in the latest frame
-       *
-       * @param frames IFrame[]
-       * @returns JSX.Element
-       */
-      const animatingFrame = (frames: IFrame[]) => {
-        const lastFrame = frames[frames.length - 1];
-        const height = lastFrame.containerHeight!;
-        const width = lastFrame.containerWidth!;
-        const styles: IWrapperStyle = {
-          position: 'relative'
-        };
-        if (dynamicDirection === 'horizontal') {
-          styles.width = width;
-        } else if (dynamicDirection === 'vertical') {
-          styles.height = height;
-        }
-        const keys = getAllUniqueKeysForFrames(frames);
-        return (
+    return (
+      <MixitupFragment key={DOMLevel.ROOT} level={DOMLevel.ROOT}>
+        <MixitupFragment key={DOMLevel.VISIBLE} level={DOMLevel.VISIBLE}>
           <MixitupFragment key={DOMLevel.WRAPPER} level={DOMLevel.WRAPPER}>
             {renderWrapper(
               {
@@ -813,127 +892,80 @@ export const ReactMixitup = React.memo(
               () => {},
               cells({
                 ref: (key, el) => {},
-                keys: keys,
+                keys,
                 style: key => {
-                  return animatedCellStyle(StageType.ANIMATE, key, frames);
+                  return animatedCellStyle(
+                    StageType.COMMIT,
+                    key,
+                    refs.current.frames,
+                    stage.whileAnimating
+                  );
                 },
-                stageType: StageType.ANIMATE,
+                stageType: StageType.COMMIT,
                 activeFrame: true
               }),
-              StageType.ANIMATE,
-              lastFrame,
+              StageType.COMMIT,
+              sizeFrame,
               true
             )}
           </MixitupFragment>
-        );
-      };
+        </MixitupFragment>
+      </MixitupFragment>
+    );
+  }
 
-      // When animating render the animatingFrame
-      if (refs.current.stage.type === StageType.ANIMATE) {
-        return (
-          <MixitupFragment key={DOMLevel.ROOT} level={DOMLevel.ROOT}>
-            <MixitupFragment key={DOMLevel.VISIBLE} level={DOMLevel.VISIBLE}>
-              {animatingFrame(refs.current.frames)}
-            </MixitupFragment>
-          </MixitupFragment>
-        );
+  // Measure
+  if (refs.current.stage.type === StageType.MEASURE) {
+    const len = refs.current.frames.length;
+    let measureFrames = refs.current.frames;
+    // all frames can be measured, but it is better to just measure the 2 last frames for performance reasons
+    measureFrames = [];
+    refs.current.frames.forEach((frame, index) => {
+      if (!frame.hasBeenMeasured) {
+        measureFrames.push(frame);
+      } else if (index >= len - 2) {
+        // push the last 2 frames
+        measureFrames.push(frame);
       }
+    });
+    return (
+      <MixitupFragment key={DOMLevel.ROOT} level={DOMLevel.ROOT}>
+        <MixitupFragment key={DOMLevel.HIDDEN} level={DOMLevel.HIDDEN}>
+          {measureFrames.map((frame, index) => {
+            return (
+              <React.Fragment key={frame.index}>
+                {measureFrame(frame, index === measureFrames.length - 1)}
+              </React.Fragment>
+            );
+          })}
+        </MixitupFragment>
+        <MixitupFragment key={DOMLevel.VISIBLE} level={DOMLevel.VISIBLE}>
+          {refs.current.stage.whileAnimating
+            ? animatingFrame(refs.current.frames.filter(frame => frame.hasBeenMeasured))
+            : staleFrame(refs.current.frames[0])}
+        </MixitupFragment>
+      </MixitupFragment>
+    );
+  }
 
-      // Commit will translate all elements to their corresponding static location of the previous frame.
-      if (refs.current.stage.type === StageType.COMMIT) {
-        const stage = refs.current.stage;
-        let sizeFrame = refs.current.frames[refs.current.frames.length - 2];
-        if (stage.whileAnimating) {
-          sizeFrame = refs.current.frames[refs.current.frames.length - 1];
-        }
-        const height = sizeFrame.containerHeight!;
-        const width = sizeFrame.containerWidth!;
-        const styles: IWrapperStyle = {
-          position: 'relative'
-        };
-        if (dynamicDirection === 'horizontal') {
-          styles.width = width;
-        } else if (dynamicDirection === 'vertical') {
-          styles.height = height;
-        }
-        const keys = getAllUniqueKeysForFrames(refs.current.frames);
+  // If stage is stale render the stale frame
+  if (refs.current.stage.type === StageType.STALE) {
+    return (
+      <MixitupFragment key={DOMLevel.ROOT} level={DOMLevel.ROOT}>
+        <MixitupFragment key={DOMLevel.VISIBLE} level={DOMLevel.VISIBLE}>
+          {staleFrame(refs.current.stage.frame)}
+        </MixitupFragment>
+      </MixitupFragment>
+    );
+  }
 
-        return (
-          <MixitupFragment key={DOMLevel.ROOT} level={DOMLevel.ROOT}>
-            <MixitupFragment key={DOMLevel.VISIBLE} level={DOMLevel.VISIBLE}>
-              <MixitupFragment key={DOMLevel.WRAPPER} level={DOMLevel.WRAPPER}>
-                {renderWrapper(
-                  {
-                    ...styles
-                  },
-                  () => {},
-                  cells({
-                    ref: (key, el) => {},
-                    keys,
-                    style: key => {
-                      return animatedCellStyle(StageType.COMMIT, key, refs.current.frames);
-                    },
-                    stageType: StageType.COMMIT,
-                    activeFrame: true
-                  }),
-                  StageType.COMMIT,
-                  sizeFrame,
-                  true
-                )}
-              </MixitupFragment>
-            </MixitupFragment>
-          </MixitupFragment>
-        );
-      }
+  return null;
+}
 
-      // Measure
-      if (refs.current.stage.type === StageType.MEASURE) {
-        const len = refs.current.frames.length;
-        const lastFrame = refs.current.frames[len - 1];
-        let measureFrames = refs.current.frames;
-        if (!props.reMeasureAllPreviousFramesOnNewKeys) {
-          measureFrames = [];
-          refs.current.frames.forEach((frame, index) => {
-            if (!frame.hasBeenMeasured) {
-              measureFrames.push(frame);
-            } else if (index >= len - 2) {
-              // push the last 2 frames
-              measureFrames.push(frame);
-            }
-          });
-        }
-        return (
-          <MixitupFragment key={DOMLevel.ROOT} level={DOMLevel.ROOT}>
-            <MixitupFragment key={DOMLevel.HIDDEN} level={DOMLevel.HIDDEN}>
-              {measureFrames.map((frame, index) => {
-                return (
-                  <React.Fragment key={frame.index}>
-                    {measureFrame(frame, index === measureFrames.length - 1)}
-                  </React.Fragment>
-                );
-              })}
-            </MixitupFragment>
-            <MixitupFragment key={DOMLevel.VISIBLE} level={DOMLevel.VISIBLE}>
-              {refs.current.stage.whileAnimating
-                ? animatingFrame(refs.current.frames.filter(frame => frame.hasBeenMeasured))
-                : staleFrame(refs.current.frames[0])}
-            </MixitupFragment>
-          </MixitupFragment>
-        );
-      }
+type ReactMixitup = <RMKey extends string | number>(
+  props: IProps<RMKey> & {
+    ref?: React.Ref<HTMLDivElement>;
+  }
+) => JSX.Element | null;
 
-      // If stage is stale render the stale frame
-      if (refs.current.stage.type === StageType.STALE) {
-        return (
-          <MixitupFragment key={DOMLevel.ROOT} level={DOMLevel.ROOT}>
-            <MixitupFragment key={DOMLevel.VISIBLE} level={DOMLevel.VISIBLE}>
-              {staleFrame(refs.current.stage.frame)}
-            </MixitupFragment>
-          </MixitupFragment>
-        );
-      }
-
-      return null;
-    }
-  )
-);
+export const ReactMixitup = React.memo(React.forwardRef(ReactMixitupComponent)) as ReactMixitup;

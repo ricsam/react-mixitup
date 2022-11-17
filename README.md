@@ -1,19 +1,24 @@
 # react-mixitup
 
-> Animate the addition, removal and shuffling of elements.
+> Animate the addition, removal and shuffling of elements in react.
 
-[![NPM](https://img.shields.io/npm/v/react-mixitup.svg)](https://www.npmjs.com/package/react-mixitup)
+[![GitHub Repo stars](https://img.shields.io/github/stars/ricsam/react-mixitup?style=social)](https://github.com/ricsam/react-mixitup)
 
 ## Getting Started
 
 Install react-mixitup
 
 ```sh
-npm install react-mixitup
+npm install --save react-mixitup
 ```
+[![npm](https://img.shields.io/npm/v/react-mixitup)](https://www.npmjs.com/package/react-mixitup)
+[![npm](https://img.shields.io/npm/dw/react-mixitup?label=npm%20downloads)](https://www.npmjs.com/package/react-mixitup)
+
 # See [documentation](https://react-mixitup.ricsam.dev/docs/intro)
 
-```tsx live
+```tsx
+import { ReactMixitup } from 'react-mixitup';
+
 function Example() {
   const [keys, setKeys] = React.useState([1,2,3]);
 
@@ -31,6 +36,7 @@ function Example() {
             key={key}
             ref={ref}
             style={{
+              // You must set the transition property here!
               transition: 'transform 300ms linear',
               ...style,
             }}

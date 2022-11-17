@@ -1,14 +1,16 @@
 {
   "name": "react-mixitup",
-  "version": "3.0.0",
-  "description": "Animate the addition, removal and shuffling of elements.",
+  "version": "4.0.0",
+  "description": "Animate the addition, removal and shuffling of elements in react",
   "keywords": [
     "react",
+    "component",
     "mixitup",
     "shuffle",
     "grid",
     "animate",
-    "transition"
+    "transition",
+    "animation"
   ],
   "main": "dist/react-mixitup.umd.js",
   "module": "dist/react-mixitup.es5.js",
@@ -76,5 +78,6 @@
   },
   "peerDependencies": {
     "react": ">=16.8"
-  }
+  },
+  "dependencies": {}
 }

@@ -1,0 +1,106 @@
+---
+sidebar_position: 2
+title: Guide
+---
+
+React mixitup takes a list of keys to determine what to render.
+
+If you have a list of images like:
+
+```tsx
+const images: { id: string; src: string } = [
+  /* a lot of images */
+];
+```
+
+then you have to convert these into a list of keys:
+
+```tsx
+const imageKeys = images.map(({ id }) => id);
+```
+
+In order to access the src of the image within a `renderCell` function you must create a dictionary mapping each id to a image.
+
+```tsx
+const dir = Object.fromEntries(images.map(img => [img.id, img]));
+```
+
+The code will then look like this:
+
+```tsx
+const [images, setImages] = React.useState<{ id: string; src: string }>([
+  /* a lot of images */
+]);
+const imageKeys = images.map(({ id }) => id);
+const dir = Object.fromEntries(images.map(img => [img.id, img]));
+
+return (
+  <ReactMixitup
+    keys={keys}
+    renderCell={(key, style, ref) => {
+      const image = dir[key];
+      return (
+        <img
+          src={img.src}
+          key={key}
+          ref={ref}
+          style={{
+            // You must set the transition property here!
+            transition: 'transform 300ms linear',
+            ...style
+          }}
+        >
+          {key}
+        </img>
+      );
+    }}
+    transitionDuration={300}
+  />
+);
+```
+
+Finally to update, and animate the update, all you have to do is change the order of the images, e.g.
+
+```tsx
+setImages(
+  images.slice(0).sort((a, b) => {
+    return a.localeCompare(b) * (DESC ? -1 : 1);
+  })
+);
+```
+
+## renderCell arguments
+
+Only the `key`, `style` and `ref` are the arguments which you must use. The render function also gets passed some additional arguments, but I've not found a good use case for them except for debugging purposes.
+
+They are described on the API page.
+
+## renderWrapper
+
+If you have a border around the wrapper holding the elements which should be animated, then you probably want the border to be animated if the number of inner items grow and shrink.
+
+The container can only change size in one direction, either vertical or horizontal, see the [API](./api) and the section regarding `dynamicDirection` for examples of this.
+
+When adding a `renderWrapper` function it is important to pass the ref, style and cells to the returned JSX element.
+
+```tsx
+return (
+  <ReactMixitup
+    keys={keys}
+    dynamicDirection="vertical"
+    transitionDuration={300}
+    renderCell={(key, style, ref) => {
+      // ...
+    }}
+    renderWrapper={(style, ref, cells) => (
+      <div ref={ref} style={{ ...style, borderBottom: '1px solid black' }}>
+        {cells}
+      </div>
+    )}
+  />
+);
+```
+
+## What is next?
+
+Explore the [examples](./examples/random) and the [FAQ](./faq).
